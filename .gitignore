@@ -11,3 +11,5 @@ build/
 *.png
 *.pdf
 results/
+
+papers/related/*
