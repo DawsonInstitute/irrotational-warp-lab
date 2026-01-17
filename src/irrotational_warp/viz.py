@@ -22,10 +22,11 @@ def plot_slice(
     extent: float,
     n: int,
     use_einstein: bool = False,
+    use_tail_correction: bool = False,
     out_path: Path,
     json_out_path: Path,
 ) -> None:
-    res = compute_slice_z0(rho=rho, sigma=sigma, v=v, extent=extent, n=n)
+    res = compute_slice_z0(rho=rho, sigma=sigma, v=v, extent=extent, n=n, tail_correction=use_tail_correction)
 
     epos, eneg, enet = integrate_signed(res.rho_adm, dx=res.dx, dy=res.dy)
 
@@ -66,10 +67,33 @@ def plot_slice(
 
     # Build JSON output
     json_data = {
-        "params": {"rho": rho, "sigma": sigma, "v": v, "extent": extent, "n": n, "use_einstein": use_einstein},
+        "params": {
+            "rho": rho,
+            "sigma": sigma,
+            "v": v,
+            "extent": extent,
+            "n": n,
+            "use_einstein": use_einstein,
+            "use_tail_correction": use_tail_correction,
+        },
         "integrals_2d": {"E_pos": epos, "E_neg": eneg, "E_net": enet},
         "rho_adm": res.rho_adm,
     }
+    if res.tail_correction is not None:
+        json_data["tail_correction"] = {
+            "exponent": res.tail_correction.exponent,
+            "amplitude": res.tail_correction.amplitude,
+            "fit_r_min": res.tail_correction.fit_r_min,
+            "fit_r_max": res.tail_correction.fit_r_max,
+            "tail_integral_pos": res.tail_correction.tail_integral_pos,
+            "tail_integral_neg": res.tail_correction.tail_integral_neg,
+            "tail_uncertainty": res.tail_correction.tail_uncertainty,
+            "fit_residual_rms": res.tail_correction.fit_residual_rms,
+            "E_pos_corrected": epos + res.tail_correction.tail_integral_pos,
+            "E_neg_corrected": eneg + res.tail_correction.tail_integral_neg,
+            "E_net_corrected": (epos + res.tail_correction.tail_integral_pos)
+            - (eneg + res.tail_correction.tail_integral_neg),
+        }
     if einstein_result is not None:
         json_data["einstein"] = {
             "eig_max": einstein_result.eig_max,

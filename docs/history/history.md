@@ -95,6 +95,59 @@ Notes:
 - `src/irrotational_warp/viz.py` (Einstein diagnostic rendering)
 - `src/irrotational_warp/io.py` (recursive JSON serialization fix)
 - `docs/TASKS.md`, `docs/NOTES.md`, `docs/history/history.md` (documentation)
+
+---
+
+## Session 4 (January 16, 2026 continued) — Implemented M4 (tail correction)
+
+**Motivation:** Finite computational grids truncate far-field tails, leading to systematic underestimation of global energy integrals. M4 addresses this by fitting the radial decay ⟨ρ⟩(r) ~ A/r^n in the far-field and analytically extrapolating to r→∞.
+
+**Implementation:**
+- Created `src/irrotational_warp/tail.py` with tail correction pipeline:
+  - `compute_radial_average_z0()`: Angle-average field over radial bins
+  - `fit_power_law_decay()`: Log-log linear regression to extract exponent n and amplitude A
+  - `extrapolate_tail_integral_2d()`: Analytic integral ∫_R^∞ (A/r^n) r dr dθ for 2D slice (convergent for n > 2)
+  - `estimate_tail_uncertainty()`: Propagate fit residuals to tail integral uncertainty
+  - `compute_tail_correction()`: Full pipeline returning TailCorrectionResult dataclass
+- Added `scipy>=1.11` to dependencies in `pyproject.toml` for curve fitting
+- Integrated into `adm.py`: added `tail_correction` parameter to `compute_slice_z0()`
+- Wired into CLI: added `--tail-correction` flag to `plot-slice` command
+- Updated `viz.py`: JSON output now includes tail diagnostics with corrected energies (E_pos_corrected, E_neg_corrected, E_net_corrected)
+- Added comprehensive tests in `tests/test_tail.py`:
+  - `test_radial_average_uniform_field()`: Validates averaging on constant field
+  - `test_power_law_fitting()`: Recovers known 1/r^4 exponent within 2%
+  - `test_tail_integral_convergence()`: Checks convergence conditions (n > 2)
+  - `test_full_tail_correction_pipeline()`: End-to-end test on synthetic field
+
+**Results:**
+- All tests passing (9/9 in 0.51s including 4 new tail tests)
+- Example run with realistic warp field (ρ=10, σ=3, v=1.5):
+  - Fitted exponent n ≈ 24 (very fast decay)
+  - Tail integral ~ 10^-8 (negligible for this config)
+  - Corrected energies: E_pos = 27.22, E_neg = 27.22, E_net ≈ 10^-5
+  - Tail uncertainty ~ 10^-9 (well-constrained fit)
+
+**Documentation updates:**
+- `docs/TASKS.md`: Marked M4 as COMPLETE with implementation details and CLI usage
+- `docs/NOTES.md`: Added tail correction section explaining convergence criteria
+- `docs/history/history.md`: This entry
+
+**Current state:**
+- M0 (scaffold + CLI): ✅ COMPLETE
+- M1 (fast ADM diagnostics): ✅ COMPLETE (2D z=0 slice; 3D pending)
+- M2 (Einstein eigenvalues): ✅ COMPLETE
+- M3 (sigma sweeps): ✅ COMPLETE
+- M4 (tail correction): ✅ COMPLETE
+- Next: M5 (multi-parameter optimization) or M6 (validation against Rodal)
+
+**Files modified/created:**
+- `src/irrotational_warp/tail.py` (new, 200+ lines)
+- `tests/test_tail.py` (new, 4 tests)
+- `src/irrotational_warp/adm.py` (added tail_correction param + import)
+- `src/irrotational_warp/cli.py` (added --tail-correction flag)
+- `src/irrotational_warp/viz.py` (tail diagnostics in JSON output)
+- `pyproject.toml` (added scipy dependency)
+- `docs/TASKS.md`, `docs/NOTES.md`, `docs/history/history.md` (documentation)
 <!-- ------ -->
 ### Session Overview (January 16, 2026)
 

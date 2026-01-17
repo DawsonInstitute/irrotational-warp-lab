@@ -2,11 +2,13 @@ from __future__ import annotations
 
 import math
 from dataclasses import dataclass
+from typing import Optional
 
 import numpy as np
 
 from .fd import central_diff_2d, central_diff_vec_2d
 from .potential import phi_dipole_cartesian
+from .tail import compute_tail_correction, TailCorrectionResult
 
 
 @dataclass(frozen=True)
@@ -19,6 +21,7 @@ class SliceResult:
     beta_y: np.ndarray  # 2D [y,x]
     dx: float
     dy: float
+    tail_correction: Optional[TailCorrectionResult] = None
 
 
 def compute_slice_z0(
@@ -28,6 +31,7 @@ def compute_slice_z0(
     v: float,
     extent: float,
     n: int,
+    tail_correction: bool = False,
 ) -> SliceResult:
     """Compute z=0 slice of Φ, β, and ADM energy density ρ_ADM.
 
@@ -36,6 +40,9 @@ def compute_slice_z0(
     with K_ij = 1/2(∂i βj + ∂j βi).
 
     This is a fast diagnostic; it is not the Rodal/McMonigal invariant eigenvalue diagnostic.
+
+    Args:
+        tail_correction: If True, compute tail extrapolation for far-field decay.
     """
     x = np.linspace(-extent, extent, n)
     y = np.linspace(-extent, extent, n)
@@ -63,6 +70,11 @@ def compute_slice_z0(
 
     rho_adm = (k_trace * k_trace - kij_kij) / (16.0 * math.pi)
 
+    # Optionally compute tail correction
+    tail_result = None
+    if tail_correction:
+        tail_result = compute_tail_correction(rho_adm, x, y, fit_r_min=0.7 * extent, n_bins=50)
+
     return SliceResult(
         x=x,
         y=y,
@@ -72,6 +84,7 @@ def compute_slice_z0(
         beta_y=beta_y,
         dx=dx,
         dy=dy,
+        tail_correction=tail_result,
     )
 
 

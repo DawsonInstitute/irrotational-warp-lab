@@ -12,6 +12,7 @@ authors = [{name = "Sherri + collaborators"}]
 dependencies = [
   "numpy>=1.24",
   "matplotlib>=3.8",
+  "scipy>=1.11",
 ]
 
 [project.optional-dependencies]

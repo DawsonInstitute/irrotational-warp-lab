@@ -242,16 +242,38 @@ Next extensions (future milestones):
 ### M4 — Tail correction + finite-box error control
 **Goal:** make global energies meaningful without absurd grid extents.
 
-Status: **NOT STARTED**
+Status: **COMPLETE**
 
 Tasks:
-1. Compute radial shells of average density $\langle\rho\rangle(r)$.
-2. Fit far-field decay (e.g., $\sim 1/r^4$) and extrapolate tail:
-   $$E(\infty) \approx E(R) + \int_R^\infty 4\pi r^2\langle\rho\rangle(r)\,dr$$
-3. Add uncertainty bars (fit residuals → tail uncertainty).
+1. ✅ Compute radial shells of average density $\langle\rho\rangle(r)$.
+2. ✅ Fit far-field decay (e.g., $\sim 1/r^4$) and extrapolate tail:
+   $$E(\infty) \approx E(R) + \int_R^\infty 2\pi r\langle\rho\rangle(r)\,dr$$
+3. ✅ Add uncertainty bars (fit residuals → tail uncertainty).
+
+Implemented (see `src/irrotational_warp/tail.py`):
+- `compute_radial_average_z0()`: Angle-average field over radial bins
+- `fit_power_law_decay()`: Log-log linear regression for ρ ~ A/r^n
+- `extrapolate_tail_integral_2d()`: Analytic tail integral for r > R (convergent for n > 2)
+- `estimate_tail_uncertainty()`: Propagate fit residuals to tail integral uncertainty
+- `compute_tail_correction()`: Full pipeline returning TailCorrectionResult
+
+CLI usage:
+```bash
+python -m irrotational_warp plot-slice --rho 10 --sigma 3 --v 1.5 --n 101 \
+  --tail-correction --out results/slice_with_tail.png --json-out results/summary_with_tail.json
+```
+
+JSON output includes:
+- `exponent`: Fitted power-law exponent n (ρ ~ 1/r^n)
+- `amplitude`: Fitted amplitude A
+- `tail_integral_pos`, `tail_integral_neg`: Tail contributions from R to infinity
+- `E_pos_corrected`, `E_neg_corrected`, `E_net_corrected`: Grid integrals + tail
+- `tail_uncertainty`: Estimated 1-sigma uncertainty in tail
+- `fit_residual_rms`: Quality of fit in log-log space
 
 Acceptance:
-- Report includes: chosen $R$, fit region, fitted exponent, tail fraction.
+- ✅ Report includes: chosen $R$ (fit_r_min), fit region, fitted exponent, tail fraction.
+- ✅ Uncertainty propagation from fit residuals to tail integrals.
 
 ### M5 — Advanced optimization + multi-parameter sweeps
 **Goal:** search for regimes minimizing negatives while keeping target kinematics.

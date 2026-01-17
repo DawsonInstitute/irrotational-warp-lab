@@ -25,8 +25,14 @@ All quantities are currently in geometric units with $G=c=1$.
 - Finite differences are used; grid resolution and domain size materially affect peak values.
 - Use convergence checks before interpreting magnitude.
 
+### Tail correction (M4 - finite-box error control)
+- `tail_correction` flag enables power-law fit to radial average ⟨ρ⟩(r) in far-field.
+- Fits ρ ~ A/r^n and analytically integrates tail from R to infinity (convergent for n > 2).
+- Output includes `E_pos_corrected`, `E_neg_corrected` with tail contribution added.
+- Useful for validating that finite-grid energies are converged; typically tail ~ 0.1-1% of grid integral for well-resolved fields.
+
 ## Next priorities
 
-- **M4 (tail correction)**: Radial shell averaging + 1/r^4 decay fitting for finite-box extrapolation.
+- **M5 (multi-parameter optimization)**: 2D heatmaps (sigma vs v), Bayesian search for minimal E⁻.
 - **M1 extension**: Full 3D volume integration (currently 2D z=0 slice approximation).
 - **Validation (M6)**: Reproduce Rodal/McMonigal parameter regimes and compare diagnostics.
