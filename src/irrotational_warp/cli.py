@@ -3,9 +3,9 @@ from pathlib import Path
 
 import numpy as np
 
-from .viz import plot_slice
+from .viz import plot_slice, plot_heatmap_2d
 from .io import write_summary_json
-from .sweep import sweep_sigma_z0
+from .sweep import sweep_sigma_z0, sweep_2d_z0
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -32,6 +32,19 @@ def build_parser() -> argparse.ArgumentParser:
     p_sweep.add_argument("--extent", type=float, default=20.0, help="Half-width of plot domain")
     p_sweep.add_argument("--n", type=int, default=201, help="Grid resolution per axis")
     p_sweep.add_argument("--out", type=Path, default=Path("results/sweep.json"))
+
+    p_sweep2d = sub.add_parser("sweep-2d", help="2D parameter sweep over (sigma, v) with heatmap visualization")
+    p_sweep2d.add_argument("--rho", type=float, default=10.0, help="Bubble radius (geometric units)")
+    p_sweep2d.add_argument("--sigma-min", type=float, default=1.0)
+    p_sweep2d.add_argument("--sigma-max", type=float, default=10.0)
+    p_sweep2d.add_argument("--sigma-steps", type=int, default=5)
+    p_sweep2d.add_argument("--v-min", type=float, default=0.5)
+    p_sweep2d.add_argument("--v-max", type=float, default=2.0)
+    p_sweep2d.add_argument("--v-steps", type=int, default=5)
+    p_sweep2d.add_argument("--extent", type=float, default=20.0, help="Half-width of plot domain")
+    p_sweep2d.add_argument("--n", type=int, default=101, help="Grid resolution per axis")
+    p_sweep2d.add_argument("--out-json", type=Path, default=Path("results/sweep_2d.json"))
+    p_sweep2d.add_argument("--out-plot", type=Path, default=Path("results/sweep_2d_heatmap.png"))
 
     return parser
 
@@ -81,6 +94,47 @@ def main(argv: list[str] | None = None) -> int:
                 "points": [p.__dict__ for p in points],
             },
         )
+        return 0
+
+    if args.cmd == "sweep-2d":
+        args.out_json.parent.mkdir(parents=True, exist_ok=True)
+        args.out_plot.parent.mkdir(parents=True, exist_ok=True)
+
+        sigma_values = np.linspace(args.sigma_min, args.sigma_max, args.sigma_steps)
+        v_values = np.linspace(args.v_min, args.v_max, args.v_steps)
+
+        print(f"Running 2D sweep over {args.sigma_steps} × {args.v_steps} = {args.sigma_steps * args.v_steps} points...")
+        points = sweep_2d_z0(
+            rho=args.rho,
+            sigma_values=sigma_values,
+            v_values=v_values,
+            extent=args.extent,
+            n=args.n,
+        )
+
+        # Save JSON output
+        write_summary_json(
+            args.out_json,
+            {
+                "params": {
+                    "rho": args.rho,
+                    "extent": args.extent,
+                    "n": args.n,
+                    "sigma_min": args.sigma_min,
+                    "sigma_max": args.sigma_max,
+                    "sigma_steps": args.sigma_steps,
+                    "v_min": args.v_min,
+                    "v_max": args.v_max,
+                    "v_steps": args.v_steps,
+                },
+                "points": [p.__dict__ for p in points],
+            },
+        )
+
+        # Generate heatmap visualization
+        plot_heatmap_2d(points, output_path=str(args.out_plot))
+        print(f"  Saved heatmap to {args.out_plot}")
+        print(f"  Saved JSON to {args.out_json}")
         return 0
 
     raise ValueError(f"Unknown command: {args.cmd}")

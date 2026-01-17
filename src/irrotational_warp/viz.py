@@ -12,6 +12,7 @@ import numpy as np
 from .adm import compute_slice_z0, integrate_signed
 from .einstein import compute_einstein_eigenvalues
 from .io import write_summary_json
+from .sweep import SweepPoint, SweepPoint2D
 
 
 def plot_slice(
@@ -102,3 +103,144 @@ def plot_slice(
         }
 
     write_summary_json(json_out_path, json_data)
+
+
+def plot_sweep(
+    points: list[SweepPoint],
+    output_path: str | None = None,
+    show: bool = False,
+) -> None:
+    """Create a multi-panel plot for a sigma sweep.
+
+    Shows e_pos, e_neg, e_net, neg_fraction vs sigma.
+    """
+    sigmas = np.array([p.sigma for p in points])
+    e_pos = np.array([p.e_pos for p in points])
+    e_neg = np.array([abs(p.e_neg) for p in points])  # Show magnitude
+    e_net = np.array([p.e_net for p in points])
+    neg_frac = np.array([p.neg_fraction for p in points])
+
+    fig, axes = plt.subplots(2, 2, figsize=(12, 10))
+
+    axes[0, 0].plot(sigmas, e_pos, "o-", color="blue")
+    axes[0, 0].set_xlabel("σ")
+    axes[0, 0].set_ylabel("E⁺")
+    axes[0, 0].set_title("Positive Energy Integral")
+    axes[0, 0].grid(True, alpha=0.3)
+
+    axes[0, 1].plot(sigmas, e_neg, "o-", color="red")
+    axes[0, 1].set_xlabel("σ")
+    axes[0, 1].set_ylabel("|E⁻|")
+    axes[0, 1].set_title("Negative Energy Integral (magnitude)")
+    axes[0, 1].grid(True, alpha=0.3)
+
+    axes[1, 0].plot(sigmas, e_net, "o-", color="green")
+    axes[1, 0].axhline(0, color="black", linestyle="--", linewidth=0.8)
+    axes[1, 0].set_xlabel("σ")
+    axes[1, 0].set_ylabel("E_net")
+    axes[1, 0].set_title("Net Energy (E⁺ - |E⁻|)")
+    axes[1, 0].grid(True, alpha=0.3)
+
+    axes[1, 1].plot(sigmas, neg_frac, "o-", color="purple")
+    axes[1, 1].set_xlabel("σ")
+    axes[1, 1].set_ylabel("Neg Fraction")
+    axes[1, 1].set_ylim([0, 1])
+    axes[1, 1].set_title("|E⁻| / (E⁺ + |E⁻|)")
+    axes[1, 1].grid(True, alpha=0.3)
+
+    fig.tight_layout()
+
+    if show:
+        plt.show()
+    if output_path:
+        fig.savefig(output_path, dpi=150, bbox_inches="tight")
+    plt.close(fig)
+
+
+def plot_heatmap_2d(
+    points: list[SweepPoint2D],
+    output_path: str | None = None,
+    show: bool = False,
+) -> None:
+    """Create heatmap visualizations for 2D (sigma, v) parameter sweep.
+
+    Shows:
+    - E^- (negative energy density integral)
+    - E^+ (positive energy density integral)
+    - neg_fraction = |E^-| / (E^+ + |E^-|)
+    """
+    # Extract unique sigma and v values
+    sigma_vals = sorted({p.sigma for p in points})
+    v_vals = sorted({p.v for p in points})
+
+    n_sigma = len(sigma_vals)
+    n_v = len(v_vals)
+
+    # Build 2D grids
+    e_neg_grid = np.full((n_v, n_sigma), np.nan)
+    e_pos_grid = np.full((n_v, n_sigma), np.nan)
+    neg_frac_grid = np.full((n_v, n_sigma), np.nan)
+
+    for pt in points:
+        i_sigma = sigma_vals.index(pt.sigma)
+        i_v = v_vals.index(pt.v)
+        e_neg_grid[i_v, i_sigma] = abs(pt.e_neg)  # Show magnitude
+        e_pos_grid[i_v, i_sigma] = pt.e_pos
+        neg_frac_grid[i_v, i_sigma] = pt.neg_fraction
+
+    # Create 3-panel heatmap
+    fig, axes = plt.subplots(1, 3, figsize=(15, 4))
+
+    extent = [sigma_vals[0], sigma_vals[-1], v_vals[0], v_vals[-1]]
+
+    # E^- magnitude
+    im0 = axes[0].imshow(
+        e_neg_grid,
+        aspect="auto",
+        origin="lower",
+        extent=extent,
+        cmap="viridis",
+        interpolation="nearest",
+    )
+    axes[0].set_xlabel("σ")
+    axes[0].set_ylabel("v/c")
+    axes[0].set_title("|E⁻| (area integral)")
+    fig.colorbar(im0, ax=axes[0])
+
+    # E^+
+    im1 = axes[1].imshow(
+        e_pos_grid,
+        aspect="auto",
+        origin="lower",
+        extent=extent,
+        cmap="plasma",
+        interpolation="nearest",
+    )
+    axes[1].set_xlabel("σ")
+    axes[1].set_ylabel("v/c")
+    axes[1].set_title("E⁺ (area integral)")
+    fig.colorbar(im1, ax=axes[1])
+
+    # Neg fraction
+    im2 = axes[2].imshow(
+        neg_frac_grid,
+        aspect="auto",
+        origin="lower",
+        extent=extent,
+        cmap="RdYlBu_r",
+        vmin=0.0,
+        vmax=1.0,
+        interpolation="nearest",
+    )
+    axes[2].set_xlabel("σ")
+    axes[2].set_ylabel("v/c")
+    axes[2].set_title("Neg Fraction |E⁻|/(E⁺+|E⁻|)")
+    fig.colorbar(im2, ax=axes[2])
+
+    fig.tight_layout()
+
+    if show:
+        plt.show()
+    if output_path:
+        fig.savefig(output_path, dpi=150, bbox_inches="tight")
+    plt.close(fig)

@@ -211,3 +211,79 @@ python -m pytest -q
 
 The repo is now well-positioned for publishable research on irrotational warp metrics, with both fast (ADM) and rigorous (Einstein tensor) diagnostics implemented and validated.
 <!-- ------ -->
+
+---
+
+## Session 5 (January 16, 2026 continued) — Implemented M5 (2D parameter sweeps + heatmaps)
+
+**Motivation:** M5 extends the 1D sigma sweep (M3) to 2D parameter space exploration, enabling systematic visualization of negative energy configurations across (σ, v) space via heatmaps. This supports optimization and parameter selection for minimal |E⁻| designs.
+
+**Implementation:**
+- Extended `src/irrotational_warp/sweep.py`:
+  - Added `SweepPoint2D` dataclass for (sigma, v) sweep results
+  - Implemented `sweep_2d_z0()`: Cartesian product sweep over sigma × v grid
+  - Added progress reporting for long-running sweeps (prints every 10 points)
+- Extended `src/irrotational_warp/viz.py`:
+  - Added `plot_heatmap_2d()`: 3-panel heatmap visualization
+    - Panel 1: |E⁻| magnitude (viridis colormap)
+    - Panel 2: E⁺ (plasma colormap)
+    - Panel 3: Negative fraction |E⁻|/(E⁺+|E⁻|) (RdYlBu_r, normalized 0–1)
+- Added CLI command `sweep-2d` in `cli.py`:
+  - Configurable sigma/v ranges (--sigma-min/max, --v-min/max)
+  - Grid resolution (--sigma-steps, --v-steps, --n for spatial grid)
+  - Outputs: JSON data + PNG heatmap
+- Created comprehensive tests in `tests/test_sweep_2d.py`:
+  - `test_sweep_2d_output_structure()`: Validates all fields present and finite
+  - `test_sweep_2d_parameter_coverage()`: Verifies all (σ, v) pairs computed
+- Fixed test assertion: `integrate_signed()` returns e_neg as **magnitude** (positive value), not signed
+
+**Results:**
+- All tests passing (11/11 in 0.55s including 2 new sweep_2d tests)
+- Generated demonstration heatmap: 7×7 grid (σ ∈ [2, 8], v ∈ [0.8, 2.0], n=71)
+  - Output: `results/sweep_2d_demo_heatmap.png` and `results/sweep_2d_demo.json`
+  - Sweep completed in ~15s (49 points × ~0.3s each)
+
+**Documentation updates:**
+- `docs/TASKS.md`: Marked M5 as **IN PROGRESS** with detailed implementation notes:
+  - ✅ 2D sweep + heatmap visualization
+  - ⏸️ Optimizer pending (grid search + Nelder-Mead refinement)
+  - ⏸️ Git SHA provenance tracking pending
+  - ⏸️ Pareto fronts deferred to future work
+- CLI usage example and JSON schema documented
+
+**Current state:**
+- M0 (scaffold + CLI): ✅ COMPLETE
+- M1 (fast ADM diagnostics): ✅ COMPLETE (2D z=0 slice; 3D pending)
+- M2 (Einstein eigenvalues): ✅ COMPLETE
+- M3 (sigma sweeps): ✅ COMPLETE
+- M4 (tail correction): ✅ COMPLETE
+- M5 (multi-parameter sweeps): ⏸️ **IN PROGRESS** (2D heatmaps complete; optimizer pending)
+- Next: M5 completion (optimizer) or M6 (validation against Rodal/McMonigal)
+
+**Files modified/created:**
+- `src/irrotational_warp/sweep.py` (added SweepPoint2D, sweep_2d_z0)
+- `src/irrotational_warp/viz.py` (added plot_heatmap_2d, updated imports)
+- `src/irrotational_warp/cli.py` (added sweep-2d command)
+- `tests/test_sweep_2d.py` (new, 2 tests)
+- `docs/TASKS.md` (updated M5 status with implementation details)
+- `docs/history/history.md` (this entry)
+
+**CLI usage:**
+```bash
+# Quick test (3×3 grid)
+python -m irrotational_warp sweep-2d --sigma-steps 3 --v-steps 3 --n 51 \
+  --out-json results/test_sweep_2d.json --out-plot results/test_sweep_2d.png
+
+# Production sweep (20×20 grid, n=101)
+python -m irrotational_warp sweep-2d --rho 10 \
+  --sigma-min 1 --sigma-max 10 --sigma-steps 20 \
+  --v-min 0.5 --v-max 2.5 --v-steps 20 --n 101 \
+  --out-json results/sweep_2d.json --out-plot results/sweep_2d_heatmap.png
+```
+
+**Next steps for M5 completion:**
+1. Implement optimizer (grid search + Nelder-Mead local refinement)
+2. Add git SHA to JSON provenance
+3. Optional: Bayesian optimization for efficient exploration
+4. Optional: Pareto front visualization for multi-objective constraints
+<!-- ------ -->

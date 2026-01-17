@@ -278,23 +278,69 @@ Acceptance:
 ### M5 — Advanced optimization + multi-parameter sweeps
 **Goal:** search for regimes minimizing negatives while keeping target kinematics.
 
-Status: **NOT STARTED**
+Status: **IN PROGRESS (2D sweep + heatmaps implemented)**
 
 Tasks:
-1. Build 2D sweep runner producing:
+1. ✅ Build 2D sweep runner producing:
    - heatmaps of $E^-$ vs ($\sigma$, $v/c$)
-   - Pareto fronts: minimize $E^-$ and peak negativity vs constraints
-2. Add optimizer (start simple):
+   - ~~Pareto fronts: minimize $E^-$ and peak negativity vs constraints~~ (future)
+2. ⏸️ Add optimizer (start simple):
    - grid search + local Nelder–Mead refinement
    - optional Bayesian optimization later
-3. Record full provenance to JSON/JSONL:
-   - parameters
-   - grid settings
-   - diagnostics summary
-   - code version (git SHA)
+3. ⏸️ Record full provenance to JSON/JSONL:
+   - ✅ parameters
+   - ✅ grid settings
+   - ✅ diagnostics summary
+   - ⏸️ code version (git SHA)
+
+Implemented (partial):
+- `sweep_2d_z0()` in `sweep.py`: Loops over (sigma, v) grid, computes signed energy integrals at each point
+- `plot_heatmap_2d()` in `viz.py`: 3-panel heatmap visualization (|E⁻|, E⁺, neg_fraction)
+- CLI: `sweep-2d` command with customizable sigma/v ranges and grid resolution
+- Tests: `test_sweep_2d.py` validates output structure and parameter coverage
+
+CLI usage:
+```bash
+python -m irrotational_warp sweep-2d --rho 10 --sigma-min 1 --sigma-max 10 --sigma-steps 20 \
+  --v-min 0.5 --v-max 2.5 --v-steps 20 --n 101 \
+  --out-json results/sweep_2d.json --out-plot results/sweep_2d_heatmap.png
+```
+
+JSON output:
+```python
+{
+  "params": {
+    "rho": 10.0,
+    "extent": 20.0,
+    "n": 101,
+    "sigma_min": 1.0, "sigma_max": 10.0, "sigma_steps": 20,
+    "v_min": 0.5, "v_max": 2.5, "v_steps": 20
+  },
+  "points": [
+    {"sigma": 1.0, "v": 0.5, "e_pos": ..., "e_neg": ..., "e_net": ..., "neg_fraction": ...},
+    ...
+  ]
+}
+```
+
+Heatmap visualization:
+- Panel 1: |E⁻| magnitude across (σ, v) space
+- Panel 2: E⁺ across (σ, v) space
+- Panel 3: Negative fraction |E⁻|/(E⁺ + |E⁻|)
+
+Test coverage:
+- ✅ Output structure validation (all fields present, finite values)
+- ✅ Parameter coverage verification (all (σ, v) pairs computed)
+
+Next steps for completion:
+- Add optimizer: Grid search with Nelder-Mead local refinement
+- Pareto front visualization for multi-objective optimization
+- Git SHA recording in JSON provenance
+- Bayesian optimization (optional extension)
 
 Acceptance:
-- Reproduces same “best” config deterministically with fixed seed.
+- ✅ 2D sweeps with heatmap visualization
+- ⏸️ Reproduces same "best" config deterministically with fixed seed (optimizer pending)
 
 ### M6 — Paper-grade validation against literature
 **Goal:** “defensible claims” with cross-checks and reproduced plots.
