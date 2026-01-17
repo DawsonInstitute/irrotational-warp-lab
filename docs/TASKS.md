@@ -477,7 +477,7 @@ Status legend:
 - [x] Implement backend-agnostic potential evaluation (NumPy/CuPy compatible)
 - [x] Add GPU acceleration support via CuPy backend
 - [x] Systematic convergence study with multiple grid resolutions
-- [ ] Profile and optimize 3D Hessian computation
+- [x] Profile and optimize 3D Hessian computation
 - [x] Implement tail corrections using 2-point $1/R$ estimator
 
 Suggested command shapes:
@@ -545,9 +545,25 @@ Note: this repo is geometric/diagnostic; causality claims require careful geodes
 
 ## 3) Simple Sourcing Models (Plasma / EM / Toy Matter)
 
-- [ ] Add a `src/irrotational_warp/sourcing.py` module with simple, parameterized positive-energy source models.
-- [ ] Compare geometric "required stress-energy" against toy sources for plausibility studies.
-- [ ] Keep this explicitly labeled as *toy* unless a full Einstein-matter solve is implemented.
+- [x] Add a `src/irrotational_warp/sourcing.py` module with simple, parameterized positive-energy source models.
+- [x] Compare geometric "required stress-energy" against toy sources for plausibility studies.
+- [x] Keep this explicitly labeled as *toy* unless a full Einstein-matter solve is implemented.
+
+**Implemented Sources:**
+- `GaussianShellSource`: Energy density peaked on spherical shell
+- `UniformDiskSource`: Constant density within disk geometry
+- `SmoothToroidalSource`: Gaussian toroidal (ring) distribution
+
+**Comparison Script:**
+```bash
+python scripts/compare_sources.py --rho 5 --sigma 4 --v 1 --nx 1200 --ny 600 \
+  --out results/sourcing/comparison.json
+```
+
+**Key Finding (ρ=5, σ=4, v=1):**
+- Toy sources show plausibility ratios of 40× to 800× (source energy / |required negative|)
+- All tested geometries provide excess capacity in this crude energy budget
+- **CAVEAT:** Does not account for spatial distribution, tensor structure, or dynamics
 
 ---
 
@@ -581,7 +597,16 @@ Important: avoid over-assertive tests (physics is sensitive to conventions); pre
 
 ## 7) Performance + Usability (Quick Wins)
 
-- [ ] Profile high-res runs (`cProfile`) and focus on Hessian/derivative computation.
-- [ ] Add `--verbose` + progress reporting for long runs (tqdm).
+- [x] Profile high-res runs (`cProfile`) and focus on Hessian/derivative computation.
+- [x] Add progress reporting for long runs (tqdm).
 - [x] GPU acceleration under WSL2 (RTX 2060 Super): CuPy backend implemented and tested.
 - [x] GPU check script added: `scripts/check_gpu.py`
+
+**Profiling Results (n=60, 216K points):**
+- Throughput: ~5M points/second
+- Bottlenecks: potential evaluation (30%), gradient calls (14%)
+- Profile script: `python scripts/profile_3d.py --n 80 --profile-out results/profiling/profile.prof`
+
+**Progress Reporting:**
+- Added tqdm progress bars to superluminal sweeps
+- Improves UX for multi-point parameter studies

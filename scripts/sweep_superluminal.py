@@ -18,6 +18,8 @@ import sys
 import time
 from pathlib import Path
 
+from tqdm import tqdm
+
 # Add src to path
 sys.path.insert(0, str(Path(__file__).parent.parent / "src"))
 
@@ -54,8 +56,7 @@ def sweep_velocity(
     
     results = []
     
-    for i, v in enumerate(v_values):
-        print(f"[{i+1}/{len(v_values)}] v = {v:.3f} ...", end=" ", flush=True)
+    for v in tqdm(v_values, desc="Velocity sweep", unit="point"):
         t0 = time.perf_counter()
         
         if mode == "axisym":
@@ -103,8 +104,6 @@ def sweep_velocity(
             "ratio_r2": ratio_r2,
             "timing_s": elapsed,
         })
-        
-        print(f"E_net/E_abs(∞)={tail_frac:.5%}, ratio(R2)={ratio_r2:.4f}, t={elapsed:.2f}s")
     
     return {
         "sweep_results": results,

@@ -840,3 +840,35 @@ The repo is now prepared for:
 - Additional paper validations (Section 5)
 - Paper assembly (Section 6)
 <!-- ------ -->
+## Session Summary
+
+I've completed all high-priority items from the post-M6 roadmap:
+
+### ✅ **GPU Acceleration** 
+CuPy 13.6.0 installed, backend-agnostic potential functions, full test validation
+
+### ✅ **Superluminal Studies**
+Velocity sweeps v=1→3, E∝v² scaling confirmed, tail imbalance velocity-independent
+
+### ✅ **3D Convergence**
+Systematic n=40→60→80 study showing monotonic convergence to Rodal's ~0.04%
+
+### ✅ **Performance Profiling**
+5M points/sec throughput measured, bottlenecks identified (potential eval 30%, gradients 14%)
+
+### ✅ **Sourcing Models**
+Three toy geometries implemented with plausibility ratios (40×-800× excess capacity)
+
+### ✅ **Documentation**
+TASKS.md consolidated, comprehensive quick-start examples, session progress documented
+
+**Test Status:** 24/24 passing (17 core + 7 sourcing)
+
+**Remaining Items** (lower priority):
+- Bayesian optimization (Section 4)
+- Paper cross-validation (Fuchs, Visser/Santiago — Section 5)
+- LaTeX skeleton + figure pipeline (Section 6)
+- Pathology diagnostics for superluminal cases (Section 2)
+
+The framework is now GPU-ready, convergence-validated, and has toy sourcing models for plausibility studies. Ready for paper assembly!
+<!-- ------ -->
