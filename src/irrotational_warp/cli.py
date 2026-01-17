@@ -3,7 +3,7 @@ from pathlib import Path
 
 import numpy as np
 
-from .viz import plot_slice, plot_heatmap_2d
+from .viz import plot_slice, plot_heatmap_2d, plot_sweep
 from .io import write_summary_json, get_git_info
 from .sweep import sweep_sigma_z0, sweep_2d_z0
 from .optimize import optimize_hybrid
@@ -33,6 +33,12 @@ def build_parser() -> argparse.ArgumentParser:
     p_sweep.add_argument("--extent", type=float, default=20.0, help="Half-width of plot domain")
     p_sweep.add_argument("--n", type=int, default=201, help="Grid resolution per axis")
     p_sweep.add_argument("--out", type=Path, default=Path("results/sweep.json"))
+    p_sweep.add_argument(
+        "--out-plot",
+        type=Path,
+        default=None,
+        help="Optional plot output (E+, |E-|, Enet, neg_fraction vs sigma)",
+    )
 
     p_sweep2d = sub.add_parser("sweep-2d", help="2D parameter sweep over (sigma, v) with heatmap visualization")
     p_sweep2d.add_argument("--rho", type=float, default=10.0, help="Bubble radius (geometric units)")
@@ -85,6 +91,8 @@ def main(argv: list[str] | None = None) -> int:
 
     if args.cmd == "sweep":
         args.out.parent.mkdir(parents=True, exist_ok=True)
+        if args.out_plot is not None:
+            args.out_plot.parent.mkdir(parents=True, exist_ok=True)
         sigma_values = np.linspace(args.sigma_min, args.sigma_max, args.sigma_steps)
         points = sweep_sigma_z0(
             rho=args.rho,
@@ -109,6 +117,11 @@ def main(argv: list[str] | None = None) -> int:
                 "points": [p.__dict__ for p in points],
             },
         )
+
+        if args.out_plot is not None:
+            plot_sweep(points, output_path=str(args.out_plot), show=False)
+            print(f"  Saved sweep plot to {args.out_plot}")
+            print(f"  Saved sweep JSON to {args.out}")
         return 0
 
     if args.cmd == "sweep-2d":
