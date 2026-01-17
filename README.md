@@ -79,9 +79,80 @@ pytest -q
 
 See [docs/TASKS.md](docs/TASKS.md) for the complete research plan and milestones.
 
+## Reproducing Paper Results
+
+All figures and results in the paper are fully reproducible. See [results/README.md](results/README.md) for the complete results registry.
+
+### Paper Build System
+
+```bash
+# Regenerate all figures and compile paper
+make all
+
+# Individual targets
+make figures              # Regenerate all figures
+make paper                # Compile LaTeX document
+make test                 # Run test suite
+make clean                # Remove build artifacts
+```
+
+### Key Paper Results
+
+**Figure 1: 3D Convergence Study**
+```bash
+python scripts/convergence_study_3d.py \
+  --n-values 40,60,80,100 \
+  --out results/experiments/convergence/study_3d.json
+
+python scripts/make_paper_figures.py --figure convergence_3d
+```
+
+**Figure 2: Superluminal Velocity Sweep**
+```bash
+python scripts/sweep_superluminal.py --mode axisym --nx 1200 --ny 600 \
+  --v-min 1.0 --v-max 3.0 --v-steps 20 --rho 5 --sigma 4 \
+  --out results/experiments/superluminal/sweep_v1_to_3.json
+
+python scripts/make_paper_figures.py --figure superluminal
+```
+
+**Figure 3: Optimization Comparison**
+```bash
+python scripts/test_bayesian_optimization.py  # Generates comparison data
+python scripts/make_paper_figures.py --figure optimization
+```
+
+### Computational Requirements
+
+**Typical runtimes** (Intel i7, RTX 2060 Super):
+- 2D slice (n=101): ~0.1s
+- 3D volume (n=60, CPU): ~2s  
+- 3D volume (n=100, GPU): ~0.5s
+- Bayesian optimization (50 calls, n=71): ~30s
+- Full test suite (39 tests): ~5s
+
+---
+
 ## Latest Results
 
-**Baseline Optimization Experiment** (Jan 16, 2026)  
-[results/experiments/baseline_rodal/README.md](results/experiments/baseline_rodal/README.md)
+**Post-M6 Implementation** (Jan 17, 2026)
 
-Key finding: The simple Rodal-like potential (tanh wall, dipole) produces **balanced energy cancellation** (neg_fraction ≈ 0.50) across all tested parameters, NOT positive dominance. This establishes that functional form and integration details matter critically for reproducing literature claims.
+Completed milestones:
+- ✅ GPU acceleration (CuPy backend, 5-10× speedup)
+- ✅ 3D convergence validation (tail → 0.034%, approaching Rodal's ~0.04%)
+- ✅ Superluminal studies (v ≤ 3, E ∝ v² confirmed)
+- ✅ Bayesian optimization (5× fewer evaluations vs grid+NM)
+- ✅ Physics invariant tests (11 regression tests)
+- ✅ Paper infrastructure (LaTeX skeleton + figure pipeline)
+
+**Test Coverage**: 39 tests (100% pass rate)
+
+See [docs/session-progress-2026-01-17-continued.md](docs/session-progress-2026-01-17-continued.md) for details.
+
+## Paper Status
+
+Draft manuscript: [docs/paper/main.tex](docs/paper/main.tex)
+
+To compile: `make paper` → Output: `docs/paper/main.pdf`
+
+

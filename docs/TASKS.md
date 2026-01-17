@@ -632,10 +632,56 @@ python scripts/test_bayesian_optimization.py
 
 ## 6) Documentation + Paper Assembly
 
-- [ ] Update README with a "Quick Start" reproduction section.
-- [x] Ensure all results include provenance: git SHA, params, grid settings, runtime.
-- [x] Add a minimal notebook under `notebooks/` for interactive demos (scripts remain source of truth).
-- [ ] Add a LaTeX skeleton under `docs/paper/` once figures/registries are stable.
+- [x] Quick-start reproduction guide in README
+- [x] Ensure all results include provenance: git SHA, params, grid settings, runtime
+- [x] Add a minimal notebook under `notebooks/` for interactive demos (scripts remain source of truth)
+- [x] Add a LaTeX skeleton under `docs/paper/` once figures/registries are stable
+- [x] Create figure regeneration pipeline via `scripts/make_paper_figures.py`
+- [x] Add Makefile for one-command paper build
+- [x] Results registry in `results/README.md`
+
+**Implementation:**
+- **LaTeX Paper**: `docs/paper/main.tex`
+  - RevTeX4-2 format (PRD style)
+  - Sections: Intro, Theory, Methods, Results, Discussion, Conclusions
+  - 3 main figures (convergence, superluminal, optimization)
+  - Bibliography with key references
+
+- **Figure Pipeline**: `scripts/make_paper_figures.py`
+  - Loads results from `results/` directory
+  - Generates publication-quality PDFs
+  - Consistent styling (seaborn-paper theme)
+  - Individual or batch generation
+
+- **Build System**: `Makefile`
+  - `make all` — Regenerate figures + compile paper
+  - `make figures` — Generate all paper figures
+  - `make paper` — Compile LaTeX (pdflatex + bibtex)
+  - `make test` — Run test suite
+  - `make clean` — Remove build artifacts
+
+- **Results Registry**: `results/README.md`
+  - Directory structure documentation
+  - Reproduction instructions
+  - Data format specification
+  - Storage policy
+
+- **README Updates**:
+  - "Reproducing Paper Results" section
+  - Build system usage
+  - Computational requirements (runtime, memory)
+  - Latest results summary
+
+**Status**: ✅ **COMPLETE** — Paper infrastructure ready for manuscript preparation
+
+**Usage**:
+```bash
+# Full paper build
+make all
+
+# Compile draft (single LaTeX pass)
+make draft
+```
 
 ---
 
