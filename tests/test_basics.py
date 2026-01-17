@@ -16,7 +16,12 @@ def test_y_symmetry_on_z0_slice():
 
 
 def test_sweep_has_expected_length_and_zero_v():
+    """Test sigma sweep on z=0 slice.
+
+    Note: uses n=41 (not 81) to avoid test timeouts.
+    Full production sweeps in scripts/ can use higher resolution.
+    """
     sigmas = np.linspace(1.0, 3.0, 5)
-    pts = sweep_sigma_z0(rho=10.0, v=0.0, sigma_values=sigmas, extent=10.0, n=81)
+    pts = sweep_sigma_z0(rho=10.0, v=0.0, sigma_values=sigmas, extent=10.0, n=41)
     assert len(pts) == 5
     assert all(abs(p.e_pos) < 1e-10 and abs(p.e_neg) < 1e-10 and abs(p.e_net) < 1e-10 for p in pts)

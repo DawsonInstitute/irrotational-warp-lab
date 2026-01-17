@@ -1,9 +1,17 @@
 # Notes / Caveats
 
-## Diagnostics we compute (first increment)
+## Diagnostics we compute
 
+### Fast diagnostics (2D z=0 slice)
 - `rho_adm` is computed from the 3+1 Hamiltonian constraint assuming **flat spatial slices** and **unit lapse**.
-- This is a useful fast diagnostic but is **observer-dependent**; it is not the Rodal/McMonigal invariant “proper energy density”.
+- This is a useful fast diagnostic but is **observer-dependent**; it is not the Rodal/McMonigal invariant "proper energy density".
+- Grid resolution: can use n=101 or higher; scales well.
+
+### Invariant diagnostics (M2 - Einstein tensor eigenvalues)
+- `eig_max` (max eigenvalue of G^μ_ν) approximates **proper energy density ρ_p** (Rodal convention).
+- `type_i_fraction` reports fraction of grid with real eigenvalues (Type I spacetime per Hawking-Ellis).
+- **Numerically expensive**: use n≤51 for 2D slices; finite-difference errors accumulate through Christoffel → Ricci → Einstein chain.
+- Enable with `--einstein` flag in `plot-slice` command.
 
 ## Units
 
@@ -17,6 +25,8 @@ All quantities are currently in geometric units with $G=c=1$.
 - Finite differences are used; grid resolution and domain size materially affect peak values.
 - Use convergence checks before interpreting magnitude.
 
-## Next
+## Next priorities
 
-Milestone M2 will add mixed Einstein tensor eigenvalue diagnostics to match Rodal-style invariants.
+- **M4 (tail correction)**: Radial shell averaging + 1/r^4 decay fitting for finite-box extrapolation.
+- **M1 extension**: Full 3D volume integration (currently 2D z=0 slice approximation).
+- **Validation (M6)**: Reproduce Rodal/McMonigal parameter regimes and compare diagnostics.

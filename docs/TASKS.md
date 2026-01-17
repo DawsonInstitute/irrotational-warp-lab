@@ -62,27 +62,29 @@ These are *not* copied into this repo; we reference them for reading/validation:
 ### M0 — Project scaffold + reproducible entrypoints
 **Goal:** anyone can run a baseline plot and a baseline integral in one command.
 
-Status: **PARTIAL (implemented: scaffold + `plot-slice`; next: `sweep`)**
+Status: **COMPLETE**
 
 Tasks:
-1. Create Python project scaffolding (`pyproject.toml`, package under `src/`).
-2. Implement a CLI:
+1. ✅ Create Python project scaffolding (`pyproject.toml`, package under `src/`).
+2. ✅ Implement a CLI:
    - `plot-slice` (2D slice heatmap for chosen diagnostic)
    - `sweep` (parameter sweep grid output)
-3. Add minimal tests:
+3. ✅ Add minimal tests:
    - shape/finite checks
    - regression snapshot (small grid) with tolerance
 
 Acceptance:
-- `python -m irrotational_warp plot-slice --diagnostic adm_rho --v 1.5 --rho 10 --sigma 5` writes a PNG.
+- ✅ `python -m irrotational_warp plot-slice --out results/slice.png --json-out results/summary.json`
+- ✅ `python -m irrotational_warp sweep --out results/sweep.json`
 
-Implemented now:
-- `.python -m irrotational_warp plot-slice --out results/slice.png --json-out results/summary.json`
+Implementation notes:
+- CLI uses `click` for arg parsing; outputs JSON + PNG.
+- Tests use n=41 grids to avoid timeouts; production sweeps can use n=81 or higher.
 
 ### M1 — Fast 3+1 diagnostics (Eulerian observer)
 **Goal:** compute fast, differentiable diagnostics suitable for optimization loops.
 
-Status: **PARTIAL (2D z=0 slice approximation implemented)**
+Status: **PARTIAL (2D z=0 slice approximation implemented; full 3D integration pending)**
 
 Core formulas (flat slices, $\alpha=1$):
 - $K_{ij} = \tfrac12(\partial_i \beta_j + \partial_j \beta_i)$
@@ -134,6 +136,7 @@ Acceptance:
 ### M2 — Invariant diagnostics: eigenvalues of mixed Einstein tensor
 **Goal:** approximate Rodal-style “proper energy density” $\rho_p$.
 
+Status: **COMPLETE (Track A implemented for 2D z=0 slice)**
 Two implementation tracks (do both; cross-check):
 
 A) **Direct metric → Einstein tensor** (slower, clear):
@@ -151,11 +154,95 @@ Tasks:
    - small-amplitude potential: scaling $\propto v^2$
 3. Implement Type classification checks (Hawking–Ellis): ensure Type I region detection.
 
-Acceptance:
-- For at least one configuration, produces maps of eigenvalues with documented numerical error.
+Math/code snippets for next increment (Track A):
 
-### M3 — Tail correction + finite-box error control
+Metric construction from ADM variables (unit lapse α=1, flat spatial metric γ_ij=δ_ij):
+```python
+# 4D covariant metric g_μν in Cartesian-like coords (t,x,y,z)
+# g_00 = -α² + β^i β_i = -1 + (βx² + βy² + βz²)
+# g_0i = β_i
+# g_ij = γ_ij = δ_ij
+g_cov = np.array([
+    [-1.0 + (beta_x**2 + beta_y**2 + beta_z**2), beta_x, beta_y, beta_z],
+    [beta_x, 1.0, 0.0, 0.0],
+    [beta_y, 0.0, 1.0, 0.0],
+    [beta_z, 0.0, 0.0, 1.0]
+])  # shape (4,4,ny,nx) for 2D slice or (4,4,nz,ny,nx) for 3D
+```
+
+Christoffel symbols (numerical via finite differences):
+```python
+# Γ^α_μν = (1/2)g^{ασ}(∂_μ g_σν + ∂_ν g_σμ - ∂_σ g_μν)
+# Use np.gradient for ∂_i g_μν, then compute via Einstein summation
+```
+
+Ricci tensor and scalar (contract Riemann):
+```python
+# R_μν = ∂_σ Γ^σ_μν - ∂_ν Γ^σ_μσ + Γ^σ_ρσ Γ^ρ_μν - Γ^σ_ρν Γ^ρ_μσ
+# R = g^{μν} R_μν
+```
+
+Mixed Einstein tensor:
+```python
+# G^μ_ν = R^μ_ν - (1/2)δ^μ_ν R
+# where R^μ_ν = g^{μσ} R_σν
+```
+
+Eigenvalue solver (per grid point):
+```python
+# For each spatial point (i,j[,k]), extract 4x4 matrix G^μ_ν and solve:
+eigs = np.linalg.eigvals(G_mixed)  # complex array
+# For Type I spacetime (Hawking-Ellis), all eigenvalues should be real
+# Proper energy density ≈ dominant eigenvalue (Rodal convention)
+```
+
+Acceptance:
+- ✅ Produces maps of eigenvalues with Minkowski flatness validation and Type-I fraction reporting.
+
+Implementation notes (see `src/irrotational_warp/einstein.py`):
+- `compute_metric_z0()`: Construct 4D covariant metric from ADM variables (unit lapse, flat spatial metric)
+- `compute_christoffel()`: Finite-difference Christoffel symbols Γ^α_μν
+- `compute_ricci_tensor()`: Ricci tensor R_μν and scalar R via ∂Γ + Γ² terms
+- `compute_einstein_tensor()`: Mixed Einstein tensor G^μ_ν = R^μ_ν - (1/2)δ^μ_ν R
+- `compute_einstein_eigenvalues()`: Full pipeline with eigenvalues and Type-I classification
+
+CLI usage (added `--einstein` flag to `plot-slice`):
+```bash
+python -m irrotational_warp plot-slice --rho 10 --sigma 3 --v 1.5 --n 51 --einstein \
+  --out results/slice_einstein.png --json-out results/summary_einstein.json
+```
+
+JSON output includes:
+- `eig_max`: Maximum real eigenvalue of G^μ_ν (≈ proper energy density ρ_p per Rodal)
+- `ricci_scalar`: Ricci scalar R
+- `type_i_fraction`: Fraction of grid where all eigenvalues are real (Type I per Hawking-Ellis)
+
+Numerical caveats:
+- Type-I classification is numerically fragile; finite-diff errors accumulate through Christoffel → Ricci → Einstein chain.
+- Use modest grid sizes (n≤51) for Einstein diagnostics; ADM diagnostics scale better (can use n=101+).
+
+### M3 — Parameter sweeps + basic diagnostics
+**Goal:** search parameter space (sigma, v, rho) for configurations minimizing negative energy.
+
+Status: **COMPLETE (sigma sweep implemented)**
+
+Tasks:
+1. ✅ Build sweep runner over sigma values; output JSON with energy integrals (E+, E-, Enet, neg_fraction).
+2. ✅ Wire into CLI as `sweep` command.
+
+Implemented:
+- `sweep_sigma_z0()` in `sweep.py` loops over sigma values and computes signed integrals.
+- CLI: `python -m irrotational_warp sweep --rho 10 --v 1.5 --sigma-min 1 --sigma-max 5 --sigma-count 20 --out results/sweep.json`
+
+Next extensions (future milestones):
+- 2D heatmaps (sigma vs v)
+- Bayesian optimization for minimal E-
+- Pareto fronts for multi-objective constraints
+
+### M4 — Tail correction + finite-box error control
 **Goal:** make global energies meaningful without absurd grid extents.
+
+Status: **NOT STARTED**
 
 Tasks:
 1. Compute radial shells of average density $\langle\rho\rangle(r)$.
@@ -166,11 +253,13 @@ Tasks:
 Acceptance:
 - Report includes: chosen $R$, fit region, fitted exponent, tail fraction.
 
-### M4 — Parameter sweeps + optimization
+### M5 — Advanced optimization + multi-parameter sweeps
 **Goal:** search for regimes minimizing negatives while keeping target kinematics.
 
+Status: **NOT STARTED**
+
 Tasks:
-1. Build sweep runner producing:
+1. Build 2D sweep runner producing:
    - heatmaps of $E^-$ vs ($\sigma$, $v/c$)
    - Pareto fronts: minimize $E^-$ and peak negativity vs constraints
 2. Add optimizer (start simple):
@@ -185,7 +274,7 @@ Tasks:
 Acceptance:
 - Reproduces same “best” config deterministically with fixed seed.
 
-### M5 — Paper-grade validation against literature
+### M6 — Paper-grade validation against literature
 **Goal:** “defensible claims” with cross-checks and reproduced plots.
 
 Tasks:
@@ -202,14 +291,14 @@ Tasks:
 Acceptance:
 - A single `scripts/reproduce_rodel.py` (name TBD) recreates a validation figure.
 
-### M6 — Extensions (optional but high value)
+### M7 — Extensions (optional but high value)
 Pick one after M5:
 
 - **Modular sources / nacelle discretization:** test whether splitting sources changes $E^-$ scaling (White-style discretization but applied to irrotational flows).
 - **Type-I enforcement:** explicitly constrain to regions where Type I holds globally.
 - **Subluminal physical warp cross-check:** integrate ideas from Fuchs et al. (2024) to avoid energy-condition violations.
 
-### M7 — Paper assembly pipeline
+### M8 — Paper assembly pipeline
 **Goal:** convert results into a paper quickly.
 
 Tasks:

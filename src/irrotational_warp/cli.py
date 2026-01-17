@@ -18,6 +18,7 @@ def build_parser() -> argparse.ArgumentParser:
     p_plot.add_argument("--v", type=float, default=1.5, help="Dimensionless v/c")
     p_plot.add_argument("--extent", type=float, default=20.0, help="Half-width of plot domain")
     p_plot.add_argument("--n", type=int, default=301, help="Grid resolution per axis")
+    p_plot.add_argument("--einstein", action="store_true", help="Compute Einstein tensor eigenvalues (slower)")
     p_plot.add_argument("--out", type=Path, default=Path("results/slice.png"))
     p_plot.add_argument("--json-out", type=Path, default=Path("results/summary.json"))
 
@@ -47,6 +48,7 @@ def main(argv: list[str] | None = None) -> int:
             v=args.v,
             extent=args.extent,
             n=args.n,
+            use_einstein=args.einstein,
             out_path=args.out,
             json_out_path=args.json_out,
         )
