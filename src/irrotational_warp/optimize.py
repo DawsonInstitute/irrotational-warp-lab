@@ -7,6 +7,13 @@ from typing import Callable
 import numpy as np
 from scipy.optimize import minimize
 
+try:
+    from skopt import gp_minimize
+    from skopt.space import Real
+    SKOPT_AVAILABLE = True
+except ImportError:
+    SKOPT_AVAILABLE = False
+
 from .adm import compute_slice_z0, integrate_signed
 
 
@@ -261,3 +268,88 @@ def optimize_hybrid(
         method="hybrid_grid_nelder_mead",
         message=f"Grid: {grid_result.n_evaluations} evals, Refinement: {refined_result.n_evaluations} evals",
     )
+
+
+def optimize_bayesian(
+    *,
+    rho: float,
+    sigma_range: tuple[float, float],
+    v_range: tuple[float, float],
+    extent: float,
+    n: int,
+    n_calls: int = 50,
+    n_initial_points: int = 10,
+    random_state: int | None = None,
+) -> OptimizationResult:
+    """Bayesian optimization using Gaussian Process regression.
+    
+    Uses scikit-optimize's gp_minimize for sample-efficient optimization
+    with automatic exploration-exploitation tradeoff.
+    
+    Args:
+        rho: Fixed bubble radius
+        sigma_range: (min, max) for sigma parameter
+        v_range: (min, max) for v parameter
+        extent: Grid half-width
+        n: Spatial grid resolution
+        n_calls: Total number of function evaluations
+        n_initial_points: Number of random evaluations before GP fitting
+        random_state: Random seed for reproducibility (None = random)
+    
+    Returns:
+        OptimizationResult with best parameters from Bayesian search
+    
+    Raises:
+        ImportError: If scikit-optimize is not installed
+    """
+    if not SKOPT_AVAILABLE:
+        raise ImportError(
+            "Bayesian optimization requires scikit-optimize. "
+            "Install with: pip install scikit-optimize"
+        )
+    
+    # Define search space
+    space = [
+        Real(sigma_range[0], sigma_range[1], name='sigma'),
+        Real(v_range[0], v_range[1], name='v'),
+    ]
+    
+    # Objective function wrapper (skopt expects single list argument)
+    n_evals = [0]
+    def objective(params):
+        n_evals[0] += 1
+        return objective_neg_energy(
+            params=np.array(params),
+            param_names=["sigma", "v"],
+            rho=rho,
+            extent=extent,
+            n=n,
+        )
+    
+    # Run Bayesian optimization
+    result = gp_minimize(
+        objective,
+        space,
+        n_calls=n_calls,
+        n_initial_points=n_initial_points,
+        random_state=random_state,
+        acq_func='EI',  # Expected Improvement
+        noise=1e-10,     # Small noise for numerical stability
+        verbose=False,
+    )
+    
+    # Compute initial value (first random point evaluated)
+    initial_params = {"sigma": result.x_iters[0][0], "v": result.x_iters[0][1]}
+    initial_value = result.func_vals[0]
+    
+    return OptimizationResult(
+        best_params={"sigma": result.x[0], "v": result.x[1]},
+        best_value=result.fun,
+        initial_params=initial_params,
+        initial_value=float(initial_value),
+        n_evaluations=n_evals[0],
+        success=True,  # gp_minimize doesn't have a success flag
+        method="bayesian_gp",
+        message=f"Bayesian optimization with {n_calls} calls ({n_initial_points} initial random)",
+    )
+

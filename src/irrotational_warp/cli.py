@@ -6,7 +6,7 @@ import numpy as np
 from .viz import plot_slice, plot_heatmap_2d, plot_sweep
 from .io import write_summary_json, get_git_info
 from .sweep import sweep_sigma_z0, sweep_2d_z0
-from .optimize import optimize_hybrid
+from .optimize import optimize_hybrid, optimize_bayesian
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -63,7 +63,17 @@ def build_parser() -> argparse.ArgumentParser:
     p_opt.add_argument("--v-steps", type=int, default=5, help="Grid search resolution (v)")
     p_opt.add_argument("--extent", type=float, default=20.0, help="Half-width of plot domain")
     p_opt.add_argument("--n", type=int, default=71, help="Grid resolution per axis")
-    p_opt.add_argument("--refine", action="store_true", help="Apply Nelder-Mead refinement after grid search")
+    p_opt.add_argument(
+        "--method",
+        type=str,
+        default="hybrid",
+        choices=["grid", "hybrid", "bayes"],
+        help="Optimization method: grid (exhaustive), hybrid (grid+Nelder-Mead), bayes (Bayesian/GP)",
+    )
+    p_opt.add_argument("--refine", action="store_true", help="[hybrid only] Apply Nelder-Mead refinement after grid search")
+    p_opt.add_argument("--n-calls", type=int, default=50, help="[bayes only] Total number of evaluations")
+    p_opt.add_argument("--n-initial", type=int, default=10, help="[bayes only] Random evaluations before GP fitting")
+    p_opt.add_argument("--random-state", type=int, default=None, help="[bayes only] Random seed for reproducibility")
     p_opt.add_argument("--out", type=Path, default=Path("results/optimization.json"))
 
     return parser
@@ -170,53 +180,91 @@ def main(argv: list[str] | None = None) -> int:
         args.out.parent.mkdir(parents=True, exist_ok=True)
 
         print(f"Running optimization over sigma ∈ [{args.sigma_min}, {args.sigma_max}], v ∈ [{args.v_min}, {args.v_max}]")
-        if args.refine:
-            print(f"  Grid search: {args.sigma_steps} × {args.v_steps} = {args.sigma_steps * args.v_steps} evaluations")
-            print(f"  Then: Nelder-Mead local refinement")
-        else:
+        
+        if args.method == "bayes":
+            print(f"  Bayesian optimization (GP): {args.n_calls} total calls ({args.n_initial} initial random)")
+            if args.random_state is not None:
+                print(f"  Random seed: {args.random_state} (reproducible)")
+            
+            result = optimize_bayesian(
+                rho=args.rho,
+                sigma_range=(args.sigma_min, args.sigma_max),
+                v_range=(args.v_min, args.v_max),
+                extent=args.extent,
+                n=args.n,
+                n_calls=args.n_calls,
+                n_initial_points=args.n_initial,
+                random_state=args.random_state,
+            )
+        elif args.method == "grid":
             print(f"  Grid search only: {args.sigma_steps} × {args.v_steps} = {args.sigma_steps * args.v_steps} evaluations")
-
-        result = optimize_hybrid(
-            rho=args.rho,
-            sigma_range=(args.sigma_min, args.sigma_max),
-            v_range=(args.v_min, args.v_max),
-            sigma_steps=args.sigma_steps,
-            v_steps=args.v_steps,
-            extent=args.extent,
-            n=args.n,
-            refine=args.refine,
-        )
+            result = optimize_hybrid(
+                rho=args.rho,
+                sigma_range=(args.sigma_min, args.sigma_max),
+                v_range=(args.v_min, args.v_max),
+                sigma_steps=args.sigma_steps,
+                v_steps=args.v_steps,
+                extent=args.extent,
+                n=args.n,
+                refine=False,
+            )
+        else:  # hybrid
+            if args.refine:
+                print(f"  Grid search: {args.sigma_steps} × {args.v_steps} = {args.sigma_steps * args.v_steps} evaluations")
+                print(f"  Then: Nelder-Mead local refinement")
+            else:
+                print(f"  Grid search only: {args.sigma_steps} × {args.v_steps} = {args.sigma_steps * args.v_steps} evaluations")
+            
+            result = optimize_hybrid(
+                rho=args.rho,
+                sigma_range=(args.sigma_min, args.sigma_max),
+                v_range=(args.v_min, args.v_max),
+                sigma_steps=args.sigma_steps,
+                v_steps=args.v_steps,
+                extent=args.extent,
+                n=args.n,
+                refine=args.refine,
+            )
 
         # Get git info for provenance
         git_info = get_git_info()
 
         # Save result
-        write_summary_json(
-            args.out,
-            {
-                "git": git_info,
-                "params": {
-                    "rho": args.rho,
-                    "extent": args.extent,
-                    "n": args.n,
-                    "sigma_range": [args.sigma_min, args.sigma_max],
-                    "v_range": [args.v_min, args.v_max],
-                    "sigma_steps": args.sigma_steps,
-                    "v_steps": args.v_steps,
-                    "refine": args.refine,
-                },
-                "optimization": {
-                    "best_params": result.best_params,
-                    "best_value": result.best_value,
-                    "initial_params": result.initial_params,
-                    "initial_value": result.initial_value,
-                    "n_evaluations": result.n_evaluations,
-                    "success": result.success,
-                    "method": result.method,
-                    "message": result.message,
-                },
+        output_data = {
+            "git": git_info,
+            "params": {
+                "rho": args.rho,
+                "extent": args.extent,
+                "n": args.n,
+                "sigma_range": [args.sigma_min, args.sigma_max],
+                "v_range": [args.v_min, args.v_max],
+                "method": args.method,
             },
-        )
+            "optimization": {
+                "best_params": result.best_params,
+                "best_value": result.best_value,
+                "initial_params": result.initial_params,
+                "initial_value": result.initial_value,
+                "n_evaluations": result.n_evaluations,
+                "success": result.success,
+                "method": result.method,
+                "message": result.message,
+            },
+        }
+        
+        # Add method-specific params
+        if args.method == "bayes":
+            output_data["params"]["n_calls"] = args.n_calls
+            output_data["params"]["n_initial"] = args.n_initial
+            if args.random_state is not None:
+                output_data["params"]["random_state"] = args.random_state
+        else:
+            output_data["params"]["sigma_steps"] = args.sigma_steps
+            output_data["params"]["v_steps"] = args.v_steps
+            if args.method == "hybrid":
+                output_data["params"]["refine"] = args.refine
+        
+        write_summary_json(args.out, output_data)
 
         print(f"\n✓ Optimization complete:")
         print(f"  Best |E⁻|: {result.best_value:.6e}")

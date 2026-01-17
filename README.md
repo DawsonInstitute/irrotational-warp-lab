@@ -54,6 +54,24 @@ python scripts/plot_superluminal.py results/superluminal_sweep.json \
   --out results/superluminal_plot.png
 ```
 
+**Parameter optimization:**
+```bash
+# Grid search + Nelder-Mead refinement (default)
+python -m irrotational_warp optimize --method hybrid --refine \
+  --sigma-min 2 --sigma-max 8 --v-min 0.8 --v-max 2.0 \
+  --sigma-steps 10 --v-steps 10 --n 71 \
+  --out results/optimization.json
+
+# Bayesian optimization with Gaussian Process (efficient)
+python -m irrotational_warp optimize --method bayes \
+  --sigma-min 2 --sigma-max 8 --v-min 0.8 --v-max 2.0 \
+  --n-calls 50 --n-initial 10 --random-state 42 --n 71 \
+  --out results/optimization_bayes.json
+
+# Compare methods
+python scripts/test_bayesian_optimization.py
+```
+
 **Run tests:**
 ```bash
 pytest -q
