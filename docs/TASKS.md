@@ -389,21 +389,40 @@ Future extensions (deferred):
 - Constraint handling (e.g., min velocity, max sigma)
 
 ### M6 — Paper-grade validation against literature
-**Goal:** “defensible claims” with cross-checks and reproduced plots.
+**Goal:** "defensible claims" with cross-checks and reproduced plots.  
+**Status:** IN PROGRESS
 
 Tasks:
-1. Extract the exact potential definitions and parameter conventions from Rodal/McMonigal.
-2. Ensure consistent units (geometric units vs SI; document conversions).
-3. Replicate at least one key figure/metric trend:
-   - sign/shape of negative regions
-   - reported reduction factors (order-of-magnitude agreement)
-4. Add a `docs/VALIDATION.md` with:
-   - what matched
-   - what didn’t
-   - plausible reasons (grid, definition, invariants)
+1. ✅ Extract the exact potential definitions from Celmaster & Rubin (2024)
+   - Lentz's flawed φ_L (Eq. phiLentz)
+   - Corrected φ_rh (Eq. phiMod)
+   - Rhomboidal source parameters
+2. ✅ Implement validation module (`validate_lentz.py`)
+   - RhomboidalSource class with proper symmetry
+   - Both potentials (φ_L and φ_rh) via numerical integration
+   - Shift vector computation
+3. ✅ Create validation script (`validate_celmaster_rubin.py`)
+   - Source shape visualization
+   - Shift vector plots (N_z, N_x)
+   - Property tests (conservation, boundedness)
+4. ✅ Document in `docs/VALIDATION.md`
+   - What matched (source structure, symmetries, qualitative features)
+   - What didn't (quantitative values - expected due to normalization)
+   - Plausible reasons (grid resolution, γ-correction, integration method)
+5. ⬜ Energy density validation (next)
+   - Implement full E calculation from shift vectors
+   - Reproduce Celmaster & Rubin Fig. 4
+   - Verify WEC violation regions
+   - Compare to our ADM implementation
 
 Acceptance:
-- A single `scripts/reproduce_rodel.py` (name TBD) recreates a validation figure.
+- ✅ `scripts/validate_celmaster_rubin.py` produces validation figures
+- ✅ Source properties verified (conservation, symmetry, boundedness)
+- ⬜ Energy density matches literature (order of magnitude, sign, spatial structure)
+- ⬜ `docs/VALIDATION.md` documents all comparisons
+
+**Reference:** Celmaster & Rubin (2024) "Violations of the Weak Energy Condition for Lentz Warp Drives"
+
 
 ### M7 — Extensions (optional but high value)
 Pick one after M5:

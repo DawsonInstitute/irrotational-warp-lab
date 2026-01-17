@@ -469,14 +469,89 @@ python -m irrotational_warp optimize --sigma-steps 10 --v-steps 10 --n 71 --refi
 - ✅ M5: Multi-parameter optimization
 
 **Remaining Milestones:**
-- ⏸️ M6: Paper-grade validation against literature
+- ⏸️ M6: Paper-grade validation against literature (IN PROGRESS)
 - ⏸️ M7: Extensions (optional)
 - ⏸️ M8: Paper assembly pipeline
 
-**Next logical step: M6 (Validation against Rodal/McMonigal papers)**
+---
 
-This would involve:
-1. Extract exact potential definitions from Rodal/McMonigal papers
-2. Replicate key figures/trends
-3. Document what matched/didn't in `docs/VALIDATION.md`
+## Session 7 (January 16, 2026 continued) — Started M6 (Validation against Celmaster & Rubin)
+
+**Motivation:** Begin paper-grade validation by implementing potentials from Celmaster & Rubin (2024) "Violations of the Weak Energy Condition for Lentz Warp Drives" to cross-validate our framework and establish defensible claims.
+
+**Key finding:** The reference paper is Celmaster & Rubin (2024), NOT Rodal/McMonigal. Corrected throughout documentation.
+
+**Implementation:**
+- Created `src/irrotational_warp/validate_lentz.py` with Lentz-style potentials:
+  - `RhomboidalSource` class: Implements Celmaster & Rubin's rhomboidal source with 7 rhomboids via symmetry
+  - `phi_L_lentz()`: Lentz's flawed original potential (for comparison) - Eq. (phiLentz) from paper
+  - `phi_rh_corrected()`: Celmaster & Rubin's corrected potential - Eq. (phiMod) from paper
+  - `compute_shift_vector()`: N = ∇φ via finite differences
+  - Supporting functions for extrinsic curvature and energy density
+- Created `scripts/validate_celmaster_rubin.py`:
+  - Reproduces rhomboidal source visualization (cf. Fig. 1 in paper)
+  - Computes and plots shift vectors N_z, N_x (cf. Fig. 2 in paper)
+  - Tests source properties (conservation, boundedness, linear cancellation)
+- Created `docs/VALIDATION.md`:
+  - Documents what matched (source structure, symmetries, qualitative features)
+  - Documents what didn't (quantitative values - expected due to normalization, γ-correction)
+  - Plausible reasons for differences (grid resolution, integration method)
+  - Checklist of remaining validation tasks (energy density, WEC violation)
+
+**Results:**
+- Validation script runs successfully, outputs saved to `validation_output/`
+- Source properties verified:
+  - ✅ Bounded domain (ρ = 0 for |z| > 2.125, |s| > 3.0)
+  - ✅ Charge conservation (with symmetry: 2×25 - 2×25 - 2×25 + 50 = 0)
+  - ✅ Linear cancellation (diagonal integrals ≈ 0)
+- Plots generated:
+  - `source_rhomboidal.png`: Rhomboidal source structure
+  - `shift_vectors.png`: N_z and N_x components
+
+**Documentation updates:**
+- `docs/TASKS.md`: Updated M6 to reflect Celmaster & Rubin reference (not Rodal/McMonigal)
+  - Marked steps 1-4 complete (source extraction, implementation, validation script, documentation)
+  - Step 5 pending: Energy density validation
+- `docs/VALIDATION.md`: Comprehensive validation documentation created
+- `docs/history/history.md`: This entry
+
+**Current state:**
+- M0–M5: ✅ COMPLETE
+- M6 (validation): ⏸️ **IN PROGRESS**
+  - ✅ Source potentials implemented
+  - ✅ Shift vectors computed
+  - ✅ Source properties validated
+  - ⏸️ Energy density comparison pending
+  - ⏸️ WEC violation verification pending
+
+**Next steps for M6 completion:**
+1. Implement full energy density computation from shift vectors
+2. Reproduce Celmaster & Rubin Fig. 4 (energy density E_rh)
+3. Verify negative energy regions (WEC violation)
+4. Compare to our ADM-based energy diagnostics from M1-M2
+5. Document any methodological differences
+
+**Files created:**
+- `src/irrotational_warp/validate_lentz.py` (new, 250+ lines)
+- `scripts/validate_celmaster_rubin.py` (new validation script)
+- `docs/VALIDATION.md` (new comprehensive validation docs)
+- `validation_output/source_rhomboidal.png` (generated plot)
+- `validation_output/shift_vectors.png` (generated plot)
+
+**Files modified:**
+- `docs/TASKS.md` (corrected author reference, updated M6 status)
+- `docs/history/history.md` (this entry)
+
+**Reference correction:**
+- **Correct:** Celmaster & Rubin (2024) "Violations of the Weak Energy Condition for Lentz Warp Drives"
+- **Paper location:** `/home/echo_/Code/asciimath/energy/papers/related/Comment_on_hyper-fast_solitons_draft_4.tex`
+- This paper critiques Lentz (2020) and provides corrected implementations
+
+**Next logical step: Complete M6 energy density validation**
+
+This will involve:
+1. Implement extrinsic curvature calculation from shift vectors
+2. Compute Eulerian energy density E
+3. Reproduce Celmaster & Rubin Fig. 4
+4. Compare to our ADM diagnostics
 <!-- ------ -->
