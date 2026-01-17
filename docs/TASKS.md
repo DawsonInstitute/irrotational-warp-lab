@@ -278,48 +278,91 @@ Acceptance:
 ### M5 — Advanced optimization + multi-parameter sweeps
 **Goal:** search for regimes minimizing negatives while keeping target kinematics.
 
-Status: **IN PROGRESS (2D sweep + heatmaps implemented)**
+Status: **COMPLETE**
 
 Tasks:
 1. ✅ Build 2D sweep runner producing:
    - heatmaps of $E^-$ vs ($\sigma$, $v/c$)
-   - ~~Pareto fronts: minimize $E^-$ and peak negativity vs constraints~~ (future)
-2. ⏸️ Add optimizer (start simple):
+2. ✅ Add optimizer:
    - grid search + local Nelder–Mead refinement
-   - optional Bayesian optimization later
-3. ⏸️ Record full provenance to JSON/JSONL:
+   - ~~optional Bayesian optimization~~ (deferred as extension)
+3. ✅ Record full provenance to JSON/JSONL:
    - ✅ parameters
    - ✅ grid settings
    - ✅ diagnostics summary
-   - ⏸️ code version (git SHA)
+   - ✅ code version (git SHA, branch, dirty status)
 
-Implemented (partial):
-- `sweep_2d_z0()` in `sweep.py`: Loops over (sigma, v) grid, computes signed energy integrals at each point
-- `plot_heatmap_2d()` in `viz.py`: 3-panel heatmap visualization (|E⁻|, E⁺, neg_fraction)
-- CLI: `sweep-2d` command with customizable sigma/v ranges and grid resolution
-- Tests: `test_sweep_2d.py` validates output structure and parameter coverage
+Implemented:
+- **2D Parameter Sweeps** (`sweep_2d_z0()` in `sweep.py`):
+  - Loops over (sigma, v) grid, computes signed energy integrals at each point
+  - Returns structured `SweepPoint2D` results
+- **Heatmap Visualization** (`plot_heatmap_2d()` in `viz.py`):
+  - 3-panel heatmap visualization (|E⁻|, E⁺, neg_fraction)
+- **Optimization Engine** (`optimize.py`):
+  - `grid_search()`: Exhaustive grid search over parameter space
+  - `optimize_nelder_mead()`: Local Nelder-Mead simplex optimization
+  - `optimize_hybrid()`: Grid search + Nelder-Mead refinement (recommended)
+- **Git Provenance** (`get_git_info()` in `io.py`):
+  - Captures git SHA, branch, and dirty status
+  - Automatically included in all JSON outputs
+- **CLI Commands**:
+  - `sweep-2d`: 2D parameter sweep with heatmap
+  - `optimize`: Hybrid optimizer for minimal |E⁻|
+- **Test Coverage** (6 tests in `test_optimize.py`):
+  - Objective function validation
+  - Grid search correctness
+  - Nelder-Mead local optimization
+  - Hybrid optimizer with/without refinement
+  - Deterministic results verification
 
-CLI usage:
+CLI usage (2D sweep):
 ```bash
 python -m irrotational_warp sweep-2d --rho 10 --sigma-min 1 --sigma-max 10 --sigma-steps 20 \
   --v-min 0.5 --v-max 2.5 --v-steps 20 --n 101 \
   --out-json results/sweep_2d.json --out-plot results/sweep_2d_heatmap.png
 ```
 
-JSON output:
+CLI usage (optimization):
+```bash
+# Grid search only
+python -m irrotational_warp optimize --rho 10 --sigma-min 2 --sigma-max 8 \
+  --v-min 0.8 --v-max 2.0 --sigma-steps 10 --v-steps 10 --n 71 \
+  --out results/optimization.json
+
+# Grid search + Nelder-Mead refinement (recommended)
+python -m irrotational_warp optimize --rho 10 --sigma-min 2 --sigma-max 8 \
+  --v-min 0.8 --v-max 2.0 --sigma-steps 10 --v-steps 10 --n 71 --refine \
+  --out results/optimization_refined.json
+```
+
+JSON output (optimize command):
 ```python
 {
+  "git": {
+    "sha": "401329a...",
+    "branch": "main",
+    "dirty": "no"
+  },
   "params": {
     "rho": 10.0,
     "extent": 20.0,
-    "n": 101,
-    "sigma_min": 1.0, "sigma_max": 10.0, "sigma_steps": 20,
-    "v_min": 0.5, "v_max": 2.5, "v_steps": 20
+    "n": 71,
+    "sigma_range": [2.0, 8.0],
+    "v_range": [0.8, 2.0],
+    "sigma_steps": 10,
+    "v_steps": 10,
+    "refine": true
   },
-  "points": [
-    {"sigma": 1.0, "v": 0.5, "e_pos": ..., "e_neg": ..., "e_net": ..., "neg_fraction": ...},
-    ...
-  ]
+  "optimization": {
+    "best_params": {"sigma": 2.15, "v": 0.82},
+    "best_value": 0.38,  // |E⁻| magnitude
+    "initial_params": {"sigma": 2.0, "v": 0.8},
+    "initial_value": 0.41,
+    "n_evaluations": 235,
+    "success": true,
+    "method": "hybrid_grid_nelder_mead",
+    "message": "Grid: 100 evals, Refinement: 135 evals"
+  }
 }
 ```
 
@@ -329,18 +372,21 @@ Heatmap visualization:
 - Panel 3: Negative fraction |E⁻|/(E⁺ + |E⁻|)
 
 Test coverage:
-- ✅ Output structure validation (all fields present, finite values)
-- ✅ Parameter coverage verification (all (σ, v) pairs computed)
-
-Next steps for completion:
-- Add optimizer: Grid search with Nelder-Mead local refinement
-- Pareto front visualization for multi-objective optimization
-- Git SHA recording in JSON provenance
-- Bayesian optimization (optional extension)
+- ✅ Objective function returns finite positive values
+- ✅ Grid search finds minima within bounds
+- ✅ Nelder-Mead improves or maintains initial value
+- ✅ Hybrid optimizer combines both methods correctly
+- ✅ Deterministic results with identical inputs
 
 Acceptance:
 - ✅ 2D sweeps with heatmap visualization
-- ⏸️ Reproduces same "best" config deterministically with fixed seed (optimizer pending)
+- ✅ Reproduces same "best" config deterministically (grid search is deterministic)
+- ✅ Git SHA provenance in all outputs
+
+Future extensions (deferred):
+- Pareto front visualization for multi-objective optimization
+- Bayesian optimization (GPyOpt or similar) for efficient exploration
+- Constraint handling (e.g., min velocity, max sigma)
 
 ### M6 — Paper-grade validation against literature
 **Goal:** “defensible claims” with cross-checks and reproduced plots.

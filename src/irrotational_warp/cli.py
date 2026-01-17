@@ -4,8 +4,9 @@ from pathlib import Path
 import numpy as np
 
 from .viz import plot_slice, plot_heatmap_2d
-from .io import write_summary_json
+from .io import write_summary_json, get_git_info
 from .sweep import sweep_sigma_z0, sweep_2d_z0
+from .optimize import optimize_hybrid
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -46,6 +47,19 @@ def build_parser() -> argparse.ArgumentParser:
     p_sweep2d.add_argument("--out-json", type=Path, default=Path("results/sweep_2d.json"))
     p_sweep2d.add_argument("--out-plot", type=Path, default=Path("results/sweep_2d_heatmap.png"))
 
+    p_opt = sub.add_parser("optimize", help="Find parameters minimizing negative energy magnitude |E⁻|")
+    p_opt.add_argument("--rho", type=float, default=10.0, help="Bubble radius (geometric units)")
+    p_opt.add_argument("--sigma-min", type=float, default=1.0)
+    p_opt.add_argument("--sigma-max", type=float, default=10.0)
+    p_opt.add_argument("--sigma-steps", type=int, default=5, help="Grid search resolution (sigma)")
+    p_opt.add_argument("--v-min", type=float, default=0.5)
+    p_opt.add_argument("--v-max", type=float, default=2.0)
+    p_opt.add_argument("--v-steps", type=int, default=5, help="Grid search resolution (v)")
+    p_opt.add_argument("--extent", type=float, default=20.0, help="Half-width of plot domain")
+    p_opt.add_argument("--n", type=int, default=71, help="Grid resolution per axis")
+    p_opt.add_argument("--refine", action="store_true", help="Apply Nelder-Mead refinement after grid search")
+    p_opt.add_argument("--out", type=Path, default=Path("results/optimization.json"))
+
     return parser
 
 
@@ -82,6 +96,7 @@ def main(argv: list[str] | None = None) -> int:
         write_summary_json(
             args.out,
             {
+                "git": get_git_info(),
                 "params": {
                     "rho": args.rho,
                     "v": args.v,
@@ -116,6 +131,7 @@ def main(argv: list[str] | None = None) -> int:
         write_summary_json(
             args.out_json,
             {
+                "git": get_git_info(),
                 "params": {
                     "rho": args.rho,
                     "extent": args.extent,
@@ -135,6 +151,67 @@ def main(argv: list[str] | None = None) -> int:
         plot_heatmap_2d(points, output_path=str(args.out_plot))
         print(f"  Saved heatmap to {args.out_plot}")
         print(f"  Saved JSON to {args.out_json}")
+        return 0
+
+    if args.cmd == "optimize":
+        args.out.parent.mkdir(parents=True, exist_ok=True)
+
+        print(f"Running optimization over sigma ∈ [{args.sigma_min}, {args.sigma_max}], v ∈ [{args.v_min}, {args.v_max}]")
+        if args.refine:
+            print(f"  Grid search: {args.sigma_steps} × {args.v_steps} = {args.sigma_steps * args.v_steps} evaluations")
+            print(f"  Then: Nelder-Mead local refinement")
+        else:
+            print(f"  Grid search only: {args.sigma_steps} × {args.v_steps} = {args.sigma_steps * args.v_steps} evaluations")
+
+        result = optimize_hybrid(
+            rho=args.rho,
+            sigma_range=(args.sigma_min, args.sigma_max),
+            v_range=(args.v_min, args.v_max),
+            sigma_steps=args.sigma_steps,
+            v_steps=args.v_steps,
+            extent=args.extent,
+            n=args.n,
+            refine=args.refine,
+        )
+
+        # Get git info for provenance
+        git_info = get_git_info()
+
+        # Save result
+        write_summary_json(
+            args.out,
+            {
+                "git": git_info,
+                "params": {
+                    "rho": args.rho,
+                    "extent": args.extent,
+                    "n": args.n,
+                    "sigma_range": [args.sigma_min, args.sigma_max],
+                    "v_range": [args.v_min, args.v_max],
+                    "sigma_steps": args.sigma_steps,
+                    "v_steps": args.v_steps,
+                    "refine": args.refine,
+                },
+                "optimization": {
+                    "best_params": result.best_params,
+                    "best_value": result.best_value,
+                    "initial_params": result.initial_params,
+                    "initial_value": result.initial_value,
+                    "n_evaluations": result.n_evaluations,
+                    "success": result.success,
+                    "method": result.method,
+                    "message": result.message,
+                },
+            },
+        )
+
+        print(f"\n✓ Optimization complete:")
+        print(f"  Best |E⁻|: {result.best_value:.6e}")
+        print(f"  Best σ: {result.best_params['sigma']:.4f}")
+        print(f"  Best v: {result.best_params['v']:.4f}")
+        print(f"  Evaluations: {result.n_evaluations}")
+        print(f"  Method: {result.method}")
+        print(f"  Saved to {args.out}")
         return 0
 
     raise ValueError(f"Unknown command: {args.cmd}")

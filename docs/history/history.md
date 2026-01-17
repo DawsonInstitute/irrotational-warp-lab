@@ -287,7 +287,100 @@ python -m irrotational_warp sweep-2d --rho 10 \
 3. Optional: Bayesian optimization for efficient exploration
 4. Optional: Pareto front visualization for multi-objective constraints
 <!-- ------ -->
-## Completed Work Summary
+
+---
+
+## Session 6 (January 16, 2026 continued) — Completed M5 (Optimization + provenance)
+
+**Motivation:** Complete M5 by implementing hybrid optimization (grid search + Nelder-Mead refinement) for finding minimal |E⁻| configurations and adding git provenance tracking for reproducibility.
+
+**Implementation:**
+- Created `src/irrotational_warp/optimize.py` with full optimization suite:
+  - `objective_neg_energy()`: Objective function minimizing |E⁻|
+  - `grid_search()`: Exhaustive grid search over (σ, v) space
+  - `optimize_nelder_mead()`: Local Nelder-Mead simplex optimization
+  - `optimize_hybrid()`: Recommended method combining grid search + local refinement
+  - `OptimizationResult` dataclass with provenance (initial/best params, n_evaluations, method, message)
+- Extended `src/irrotational_warp/io.py`:
+  - `get_git_sha()`: Capture current git commit SHA
+  - `get_git_info()`: Full git metadata (SHA, branch, dirty status)
+- Wired into CLI: added `optimize` command in `cli.py`:
+  - Flags: `--sigma-min/max`, `--v-min/max`, `--sigma-steps`, `--v-steps`, `--n`, `--refine`
+  - Automatically includes git info in JSON output for reproducibility
+- Updated existing commands (`sweep`, `sweep-2d`) to include git provenance
+- Created comprehensive tests in `tests/test_optimize.py`:
+  - `test_objective_function()`: Validates finite positive outputs
+  - `test_grid_search_basic()`: Finds minima within bounds
+  - `test_nelder_mead_basic()`: Local optimization improves or maintains
+  - `test_hybrid_without_refinement()`: Grid-only mode
+  - `test_hybrid_with_refinement()`: Full hybrid pipeline
+  - `test_optimizer_determinism()`: Reproducible results with identical inputs
+
+**Results:**
+- All tests passing (17/17 in 0.63s including 6 new optimizer tests)
+- Example optimization run (3×3 grid, no refinement):
+  - Best |E⁻|: 3.81e-01
+  - Best params: σ=1.0, v=0.5
+  - 9 evaluations (grid only)
+- Example with refinement:
+  - Best |E⁻|: 3.81e-01 (converged to boundary)
+  - 128 total evaluations (9 grid + 119 Nelder-Mead)
+
+**Documentation updates:**
+- `docs/TASKS.md`: Marked M5 as **COMPLETE** with:
+  - Full implementation details for all optimizer variants
+  - CLI usage examples (grid-only and hybrid modes)
+  - JSON output schema showing git provenance
+  - Test coverage summary
+- `docs/history/history.md`: This entry
+
+**Current state:**
+- M0 (scaffold + CLI): ✅ COMPLETE
+- M1 (fast ADM diagnostics): ✅ COMPLETE (2D z=0 slice; 3D pending)
+- M2 (Einstein eigenvalues): ✅ COMPLETE
+- M3 (sigma sweeps): ✅ COMPLETE
+- M4 (tail correction): ✅ COMPLETE
+- M5 (multi-parameter optimization): ✅ **COMPLETE**
+- Next: M6 (validation against Rodal/McMonigal) or M1 extension (3D integration)
+
+**Files modified/created:**
+- `src/irrotational_warp/optimize.py` (new, 250+ lines)
+- `src/irrotational_warp/io.py` (added git provenance functions)
+- `src/irrotational_warp/cli.py` (added optimize command, git info in all outputs)
+- `tests/test_optimize.py` (new, 6 tests)
+- `docs/TASKS.md` (marked M5 complete with full docs)
+- `docs/history/history.md` (this entry)
+
+**CLI usage:**
+```bash
+# Grid search only (fast, deterministic)
+python -m irrotational_warp optimize --rho 10 --sigma-min 2 --sigma-max 8 \
+  --v-min 0.8 --v-max 2.0 --sigma-steps 10 --v-steps 10 --n 71 \
+  --out results/optimization.json
+
+# Hybrid: grid + Nelder-Mead refinement (recommended)
+python -m irrotational_warp optimize --rho 10 --sigma-min 2 --sigma-max 8 \
+  --v-min 0.8 --v-max 2.0 --sigma-steps 10 --v-steps 10 --n 71 --refine \
+  --out results/optimization_refined.json
+```
+
+**Git provenance in all JSON outputs:**
+- `git.sha`: Current commit hash
+- `git.branch`: Active branch name
+- `git.dirty`: "yes" if uncommitted changes, "no" if clean
+
+**Acceptance criteria met:**
+- ✅ 2D sweeps with heatmap visualization (Session 5)
+- ✅ Hybrid optimizer (grid + Nelder-Mead) implemented
+- ✅ Git SHA provenance in all JSON outputs
+- ✅ Reproduces same "best" config deterministically (grid search is deterministic)
+- ✅ All 17 tests passing
+
+**Deferred extensions (future work):**
+- Bayesian optimization (GPyOpt/skopt) for efficient high-dimensional exploration
+- Pareto front visualization for multi-objective constraints
+- Constraint handling (e.g., physical bounds on v, manufacturability limits on σ)
+<!-- ------ -->## Completed Work Summary
 
 Successfully implemented **M5 (partial): 2D Parameter Sweeps with Heatmap Visualization**
 
