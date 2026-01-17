@@ -62,6 +62,8 @@ These are *not* copied into this repo; we reference them for reading/validation:
 ### M0 — Project scaffold + reproducible entrypoints
 **Goal:** anyone can run a baseline plot and a baseline integral in one command.
 
+Status: **PARTIAL (implemented: scaffold + `plot-slice`; next: `sweep`)**
+
 Tasks:
 1. Create Python project scaffolding (`pyproject.toml`, package under `src/`).
 2. Implement a CLI:
@@ -74,8 +76,13 @@ Tasks:
 Acceptance:
 - `python -m irrotational_warp plot-slice --diagnostic adm_rho --v 1.5 --rho 10 --sigma 5` writes a PNG.
 
+Implemented now:
+- `.python -m irrotational_warp plot-slice --out results/slice.png --json-out results/summary.json`
+
 ### M1 — Fast 3+1 diagnostics (Eulerian observer)
 **Goal:** compute fast, differentiable diagnostics suitable for optimization loops.
+
+Status: **PARTIAL (2D z=0 slice approximation implemented)**
 
 Core formulas (flat slices, $\alpha=1$):
 - $K_{ij} = \tfrac12(\partial_i \beta_j + \partial_j \beta_i)$
@@ -92,6 +99,34 @@ Tasks:
    - $E^+ = \int_{\rho>0} \rho\, dV$
    - $E^- = \int_{\rho<0} |\rho|\, dV$
    - $E_{\rm net} = E^+ - E^-$
+
+Current implementation notes:
+- The repo currently computes a **2D z=0 slice** diagnostic with an area integral ($dA$) rather than a full 3D volume integral ($dV$).
+- This is sufficient for rapid iteration and plotting; a full 3D implementation is a natural next increment.
+
+Math / code snippets (current conventions):
+
+Rodal-like dipole potential (axisymmetric, oriented along +x):
+```python
+def phi_dipole_cartesian(x, y, z, *, rho, sigma, v, eps=1e-12):
+   r = np.sqrt(x*x + y*y + z*z)
+   f = 0.5 * (1.0 + np.tanh(sigma * (1.0 - r / rho)))
+   costheta = x / (r + eps)
+   return v * rho * f * costheta
+```
+
+Fast ADM energy density (flat slices, unit lapse):
+```python
+# K_ij = 1/2(∂i βj + ∂j βi), β = ∇Φ
+rho_adm = (K_trace**2 - (KijKij)) / (16*np.pi)
+```
+
+Signed integrals (2D slice):
+```python
+E_pos = sum(rho[rho>0]) * dA
+E_neg = sum(-rho[rho<0]) * dA
+E_net = E_pos - E_neg
+```
 
 Acceptance:
 - Produces stable values under grid refinement (convergence plot).

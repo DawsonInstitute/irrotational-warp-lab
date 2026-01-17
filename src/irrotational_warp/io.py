@@ -9,6 +9,8 @@ import numpy as np
 
 
 def _to_jsonable(obj: Any) -> Any:
+    if isinstance(obj, np.generic):
+        return obj.item()
     if isinstance(obj, np.ndarray):
         return {
             "shape": list(obj.shape),
