@@ -160,19 +160,3 @@ See [docs/session-progress-2026-01-17-continued.md](docs/session-progress-2026-0
 Draft manuscript: [papers/irrotational_warp_metric.tex](papers/irrotational_warp_metric.tex)
 
 To compile: `make paper` → Output: `papers/irrotational_warp_metric.pdf`
-
-## Citation
-
-If you use this code or results in your research, please cite:
-
-```bibtex
-@software{irrotational_warp_lab_2026,
-  author = {Ryan Sherrington},
-  title = {Irrotational Warp Lab: Validation and Optimization Framework for Curl-Free Shift-Vector Warp Metrics},
-  year = {2026},
-  url = {https://github.com/DawsonInstitute/irrotational-warp-lab},
-  version = {0.1.0}
-}
-```
-
-
