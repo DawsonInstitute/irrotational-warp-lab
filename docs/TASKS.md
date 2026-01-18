@@ -700,3 +700,36 @@ make draft
 **Progress Reporting:**
 - Added tqdm progress bars to superluminal sweeps
 - Improves UX for multi-point parameter studies
+
+---
+
+# Featured Project Polish (public-ready)
+
+Status legend:
+- `[ ]` not started
+- `[-]` in progress
+- `[x]` complete
+
+## 1) Repo hygiene + docs
+
+- [x] Add `LICENSE` (MIT)
+- [x] Add `CONTRIBUTING.md` (dev setup, tests, lint, paper build)
+- [x] Add `CODE_OF_CONDUCT.md`
+- [x] Add `SECURITY.md` (vulnerability reporting + dependency guidance)
+- [x] Add a short `docs/RELEASING.md` (version bump + tag + changelog notes)
+
+## 2) Tooling + CI
+
+- [x] Add GitHub Actions CI: `ruff` + `pytest` (and optional `make all` when TeX is available)
+- [x] Add coverage tooling (`pytest-cov`) and a `make test-cov` target
+- [x] Add `make lint` / `make format` targets (ruff)
+
+## 3) Dependency management
+
+- [ ] Document how to reproduce the environment (Python version, `pip install -e .[dev]`)
+- [ ] Add a pinned export artifact (e.g., `requirements-dev.txt` via `pip freeze`) for reproducibility
+
+## 4) Generated artifacts policy
+
+- [x] Keep repo root clean: move stray Rodal artifacts into `results/rodal/`
+- [ ] Ensure scripts accept `--out` and never default to writing in repo root

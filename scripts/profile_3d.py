@@ -123,7 +123,7 @@ def main(argv=None):
     print(f"Time per point: {elapsed/n_points*1e6:.2f} μs")
     
     energies = result['energies']
-    print(f"\nEnergy results:")
+    print("\nEnergy results:")
     print(f"  E+: {energies['e_pos']:.6e}")
     print(f"  E-: {energies['e_neg']:.6e}")
     print(f"  neg_fraction: {energies['neg_fraction']:.6f}")

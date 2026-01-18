@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Generate publication-quality figures for the paper.
 
-This script regenerates all figures referenced in docs/paper/main.tex
+This script regenerates all figures referenced in papers/irrotational_warp_metric.tex
 from results data with consistent styling.
 """
 from __future__ import annotations
@@ -101,9 +101,12 @@ def make_superluminal(out_path: Path):
     # If using axisym, tail_net_frac is fraction (~1e-6). Convert to pct if needed.
     # Convergence data was already pct (~0.1).
     def get_pct(p):
-        if 'net_over_abs_pct' in p: return p['net_over_abs_pct']
-        if 'tail_imbalance_pct' in p: return p['tail_imbalance_pct']
-        if 'tail_net_frac' in p: return p['tail_net_frac'] * 100.0
+        if 'net_over_abs_pct' in p:
+            return p['net_over_abs_pct']
+        if 'tail_imbalance_pct' in p:
+            return p['tail_imbalance_pct']
+        if 'tail_net_frac' in p:
+            return p['tail_net_frac'] * 100.0
         return 0.0
 
     tail_pct = [get_pct(p) for p in points]

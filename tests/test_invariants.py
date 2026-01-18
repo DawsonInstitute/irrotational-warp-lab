@@ -103,7 +103,6 @@ def test_coordinate_independence_axisymmetric():
     if np.any(mask_nonzero):
         rel_diff = np.abs((top_half[mask_nonzero] - bottom_half[mask_nonzero]) / 
                          (np.abs(top_half[mask_nonzero]) + 1e-12))
-        max_rel_diff = np.max(rel_diff)
         
         # Should have < 200% relative difference for most points (relaxed for numerical FD)
         # Note: The dipole is along +x, so y-symmetry is approximate after FD discretization

@@ -56,8 +56,8 @@ def check_gpu():
         print(f"✅ GPU computation test passed (sum={result})")
 
         # Memory info
-        mempool = cp.get_default_memory_pool()
-        print(f"✅ GPU memory pool initialized")
+        cp.get_default_memory_pool()
+        print("✅ GPU memory pool initialized")
 
         print("\n" + "=" * 60)
         print("GPU ACCELERATION READY")

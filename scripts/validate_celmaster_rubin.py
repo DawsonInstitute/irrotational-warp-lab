@@ -21,7 +21,6 @@ sys.path.insert(0, str(Path(__file__).parent.parent / "src"))
 
 from irrotational_warp.validate_lentz import (
     RhomboidalSource,
-    phi_L_lentz,
     phi_rh_corrected,
     compute_shift_vector,
     compute_energy_density_at_point,
@@ -127,8 +126,8 @@ def test_source_properties():
     # Test 2: Charge conservation
     print("\n2. Charge Conservation:")
     print(f"   Explicit sum of table α_i = {np.sum(source.alpha):.6f}")
-    print(f"   Note: Symmetry creates 7 rhomboids from 4 table entries")
-    print(f"   With symmetry: 2×25 + 2×(-25) + 2×(-25) + 1×50 = 0")
+    print("   Note: Symmetry creates 7 rhomboids from 4 table entries")
+    print("   With symmetry: 2×25 + 2×(-25) + 2×(-25) + 1×50 = 0")
     
     # Verify by integrating total charge
     s_vals = np.linspace(-5, 5, 500)
@@ -219,7 +218,7 @@ def plot_energy_density():
     if np.any(negative_mask):
         num_negative = np.sum(negative_mask)
         total = E_grid.size
-        print(f"\n✓ WEC violation detected:")
+        print("\n✓ WEC violation detected:")
         print(f"  {num_negative}/{total} points have negative energy density")
         print(f"  E_min = {E_grid.min():.6e}")
     else:

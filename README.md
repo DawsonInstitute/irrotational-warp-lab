@@ -151,8 +151,8 @@ See [docs/session-progress-2026-01-17-continued.md](docs/session-progress-2026-0
 
 ## Paper Status
 
-Draft manuscript: [docs/paper/main.tex](docs/paper/main.tex)
+Draft manuscript: [papers/irrotational_warp_metric.tex](papers/irrotational_warp_metric.tex)
 
-To compile: `make paper` → Output: `docs/paper/main.pdf`
+To compile: `make paper` → Output: `papers/irrotational_warp_metric.pdf`
 
 

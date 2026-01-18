@@ -1002,3 +1002,21 @@ results/
 
 The codebase and manuscript are now fully aligned with your specifications and ready for review.
 <!-- ------ -->
+**Repo polish is in place and validated.**
+
+- Added open-source scaffolding: LICENSE, CONTRIBUTING.md, CODE_OF_CONDUCT.md, SECURITY.md, and release notes in RELEASING.md.
+- Added CI workflow for `ruff` + `pytest`: ci.yml.
+- Tooling upgrades:
+  - Added `pytest-cov` to dev deps + coverage config in pyproject.toml.
+  - Added `make test-cov`, `make lint`, `make format` in Makefile.
+  - Ignored coverage artifacts in .gitignore.
+- Fixed paper pointer in README.md to the current manuscript in papers/ (not docs/paper/).
+- Cleaned stray Rodal artifacts from repo root by moving them under rodal (they were generated/ignored artifacts; the tracked root `.txt` files now show as deleted).
+- Made `make lint` pass by fixing a handful of simple ruff issues across scripts/src/tests (unused imports, extraneous `f""`, lambda assignment, one-line returns).
+
+**Validation**
+- `make test` passes (39 tests).
+- `make test-cov` passes (currently ~51% overall, with CLI/viz modules largely uncovered).
+- `make lint` now passes.
+
+<!-- ------ -->

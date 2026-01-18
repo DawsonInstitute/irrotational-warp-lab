@@ -2,7 +2,6 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Callable
 
 import numpy as np
 from scipy.optimize import minimize
@@ -178,7 +177,10 @@ def optimize_nelder_mead(
         
         obj_func = bounded_objective
     else:
-        obj_func = lambda params: objective_neg_energy(params, param_names, rho, extent, n)
+        def unbounded_objective(params):
+            return objective_neg_energy(params, param_names, rho, extent, n)
+
+        obj_func = unbounded_objective
     
     # Track number of evaluations
     n_evals = [0]

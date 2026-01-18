@@ -14,7 +14,6 @@ Usage:
 
 import argparse
 import json
-import sys
 from pathlib import Path
 
 import matplotlib.pyplot as plt
@@ -107,7 +106,7 @@ def plot_superluminal_sweep(data: dict, out_path: str):
     v_doubled_idx = np.argmin(np.abs(np.array(v_vals) - 2 * v_vals[0]))
     if v_doubled_idx > 0:
         e_ratio = e_pos[v_doubled_idx] / e_pos[0]
-        print(f"\nEnergy scaling check (v doubled):")
+        print("\nEnergy scaling check (v doubled):")
         print(f"  E+(v={v_vals[v_doubled_idx]:.2f}) / E+(v={v_vals[0]:.2f}) = {e_ratio:.2f}")
         print(f"  Expected for v^2 scaling: {(v_vals[v_doubled_idx]/v_vals[0])**2:.2f}")
     print("=" * 60)

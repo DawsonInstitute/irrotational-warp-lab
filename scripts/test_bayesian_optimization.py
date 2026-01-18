@@ -34,7 +34,7 @@ def test_bayesian_reproducibility():
     print(f"Running Bayesian optimization with seed={params['random_state']}...")
     result1 = optimize_bayesian(**params)
     
-    print(f"Re-running with same seed...")
+    print("Re-running with same seed...")
     result2 = optimize_bayesian(**params)
     
     # Check reproducibility
@@ -78,7 +78,7 @@ def test_bayesian_vs_hybrid():
     )
     
     # Bayesian (GP)
-    print(f"Running Bayesian optimization (30 calls, 8 initial)...")
+    print("Running Bayesian optimization (30 calls, 8 initial)...")
     bayes_result = optimize_bayesian(
         **common_params,
         n_calls=30,
@@ -101,7 +101,7 @@ def test_bayesian_vs_hybrid():
     improvement_ratio = hybrid_result.best_value / bayes_result.best_value
     eval_ratio = hybrid_result.n_evaluations / bayes_result.n_evaluations
     
-    print(f"\nAnalysis:")
+    print("\nAnalysis:")
     print(f"  Value ratio (hybrid/bayes): {improvement_ratio:.3f}")
     print(f"  Eval ratio (hybrid/bayes):  {eval_ratio:.2f}x")
     
@@ -113,7 +113,7 @@ def test_bayesian_vs_hybrid():
     if bayes_result.n_evaluations < hybrid_result.n_evaluations:
         print(f"  → Bayesian used fewer evaluations ({eval_ratio:.1f}x reduction)")
     else:
-        print(f"  → Hybrid used fewer evaluations")
+        print("  → Hybrid used fewer evaluations")
     
     return hybrid_result, bayes_result
 
@@ -143,14 +143,14 @@ def test_bayesian_bounds():
     sigma_ok = sigma_min <= result.best_params["sigma"] <= sigma_max
     v_ok = v_min <= result.best_params["v"] <= v_max
     
-    print(f"\nBest parameters:")
+    print("\nBest parameters:")
     print(f"  σ = {result.best_params['sigma']:.4f}  {'✓' if sigma_ok else '✗ OUT OF BOUNDS'}")
     print(f"  v = {result.best_params['v']:.4f}  {'✓' if v_ok else '✗ OUT OF BOUNDS'}")
     
     if sigma_ok and v_ok:
-        print(f"\n✓ PASS: All parameters within specified bounds")
+        print("\n✓ PASS: All parameters within specified bounds")
     else:
-        print(f"\n✗ FAIL: Parameters violated bounds!")
+        print("\n✗ FAIL: Parameters violated bounds!")
     
     return result
 

@@ -211,7 +211,7 @@ def main(argv: list[str] | None = None) -> int:
         else:  # hybrid
             if args.refine:
                 print(f"  Grid search: {args.sigma_steps} × {args.v_steps} = {args.sigma_steps * args.v_steps} evaluations")
-                print(f"  Then: Nelder-Mead local refinement")
+                print("  Then: Nelder-Mead local refinement")
             else:
                 print(f"  Grid search only: {args.sigma_steps} × {args.v_steps} = {args.sigma_steps * args.v_steps} evaluations")
             
@@ -266,7 +266,7 @@ def main(argv: list[str] | None = None) -> int:
         
         write_summary_json(args.out, output_data)
 
-        print(f"\n✓ Optimization complete:")
+        print("\n✓ Optimization complete:")
         print(f"  Best |E⁻|: {result.best_value:.6e}")
         print(f"  Best σ: {result.best_params['sigma']:.4f}")
         print(f"  Best v: {result.best_params['v']:.4f}")

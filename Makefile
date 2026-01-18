@@ -8,8 +8,9 @@ PAPER_NAME := irrotational_warp_metric
 
 # Python environment
 PYTHON := .venv/bin/python
+RUFF := $(PYTHON) -m ruff
 
-.PHONY: all figures paper clean help
+.PHONY: all figures paper clean help test test-cov lint format
 
 all: figures paper
 
@@ -22,6 +23,9 @@ help:
 	@echo "  paper     - Compile LaTeX document"
 	@echo "  clean     - Remove generated files"
 	@echo "  test      - Run full test suite"
+	@echo "  test-cov  - Run tests with coverage"
+	@echo "  lint      - Run ruff lint"
+	@echo "  format    - Run ruff formatter"
 	@echo ""
 	@echo "Requirements:"
 	@echo "  - Python virtual environment at .venv/"
@@ -70,6 +74,15 @@ $(PAPER_DIR)/$(PAPER_NAME).pdf: $(PAPER_DIR)/$(PAPER_NAME).tex figures
 # Run tests
 test:
 	$(PYTHON) -m pytest -q
+
+test-cov:
+	$(PYTHON) -m pytest --cov=irrotational_warp --cov-report=term-missing
+
+lint:
+	$(RUFF) check .
+
+format:
+	$(RUFF) format .
 
 # Clean build artifacts
 clean:
