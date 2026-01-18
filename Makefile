@@ -1,9 +1,10 @@
 # Paper Figure Generation Pipeline
-# Regenerates all figures referenced in docs/paper/main.tex
+# Regenerates all figures referenced in papers/irrotational_warp_metric.tex
 
-PAPER_DIR := docs/paper
+PAPER_DIR := papers
 FIGURES_DIR := $(PAPER_DIR)/figures
 RESULTS_DIR := results
+PAPER_NAME := irrotational_warp_metric
 
 # Python environment
 PYTHON := .venv/bin/python
@@ -56,15 +57,15 @@ figures: $(FIGURES_DIR)/convergence_3d.pdf \
 	@echo "✓ All figures generated"
 
 # Compile paper
-paper: $(PAPER_DIR)/main.pdf
+paper: $(PAPER_DIR)/$(PAPER_NAME).pdf
 
-$(PAPER_DIR)/main.pdf: $(PAPER_DIR)/main.tex figures
+$(PAPER_DIR)/$(PAPER_NAME).pdf: $(PAPER_DIR)/$(PAPER_NAME).tex figures
 	@echo "Compiling LaTeX document..."
-	cd $(PAPER_DIR) && pdflatex -interaction=nonstopmode main.tex
-	cd $(PAPER_DIR) && bibtex main || true
-	cd $(PAPER_DIR) && pdflatex -interaction=nonstopmode main.tex
-	cd $(PAPER_DIR) && pdflatex -interaction=nonstopmode main.tex
-	@echo "✓ Paper compiled: $(PAPER_DIR)/main.pdf"
+	cd $(PAPER_DIR) && pdflatex -interaction=nonstopmode $(PAPER_NAME).tex
+	cd $(PAPER_DIR) && bibtex $(PAPER_NAME) || true
+	cd $(PAPER_DIR) && pdflatex -interaction=nonstopmode $(PAPER_NAME).tex
+	cd $(PAPER_DIR) && pdflatex -interaction=nonstopmode $(PAPER_NAME).tex
+	@echo "✓ Paper compiled: $(PAPER_DIR)/$(PAPER_NAME).pdf"
 
 # Run tests
 test:
@@ -78,5 +79,5 @@ clean:
 
 # Quick draft (single LaTeX pass, no bibtex)
 draft: figures
-	cd $(PAPER_DIR) && pdflatex -interaction=nonstopmode main.tex
+	cd $(PAPER_DIR) && pdflatex -interaction=nonstopmode $(PAPER_NAME).tex
 	@echo "✓ Draft compiled (single pass)"

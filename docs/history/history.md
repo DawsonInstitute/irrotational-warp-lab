@@ -964,3 +964,41 @@ All key documents updated:
 
 The framework is now **publication-ready** with robust testing, efficient optimization, and complete paper assembly infrastructure! 🎯
 <!-- ------ -->
+All tasks from your backlog have been successfully addressed. The paper structure and contents have been refactored to match your requirements, and the document compiles successfully with all figures.
+
+### Completed Actions
+1.  **Refactoring**:
+    -   Renamed main.tex to irrotational_warp_metric.tex.
+    -   Moved `rodal_output` and other result files to results directory.
+    -   Updated Makefile and make_paper_figures.py to reference the new paths and data structures.
+
+2.  **Configuration & Style**:
+    -   Switched document class to `\documentclass[10pt,twocolumn]{article}` to match lqg_cc_constraints.tex.
+    -   Integrated author_config.tex for author metadata.
+    -   Added the manual footnote block for the email address as specified in `lqg_cc_constraints.tex:39-42`.
+    -   Hardcoded the date to January 17, 2026.
+
+3.  **Content Updates**:
+    -   Updated **Acknowledgments** with your self-funding and hardware specs (Ryzen 5 3600, RTX 2060 SUPER).
+    -   Updated **Data Availability** URL to use `arcticoder` username.
+    -   updated **Citations**: Checked against your inputs (Rodal 2025 from RIS, Celmaster 2025 from prompt), updated the `.bib` file to `ieeetr` style, and fixed the in-text references.
+
+4.  **Verification**:
+    -   **Figures**: `make figures` successfully regenerated all plots (`convergence_3d`, `superluminal`, `optimization`).
+    -   **Compilation**: `make all` successfully compiled the 4-page PDF irrotational_warp_metric.pdf.
+
+### New File Structure
+```text
+papers/
+├── author_config.tex         # Author definitions
+├── figures/                  # Generated PDF figures
+├── irrotational_warp_metric.bib  # Bibliography
+├── irrotational_warp_metric.pdf  # Final compiled paper
+└── irrotational_warp_metric.tex  # Main source
+results/
+├── experiments/              # Raw JSON data from sweeps
+└── ...                       # Moved output files
+```
+
+The codebase and manuscript are now fully aligned with your specifications and ready for review.
+<!-- ------ -->

@@ -50,9 +50,10 @@ def make_convergence_3d(out_path: Path):
     data = load_json(data_path)
     
     # Extract data
-    resolutions = [p['n'] for p in data['points']]
-    tail_imbalances = [p['tail_imbalance_pct'] for p in data['points']]
-    ratios_r2 = [p['ratio_at_r2'] for p in data['points']]
+    points = data.get('results', data.get('points', []))
+    resolutions = [p['n'] for p in points]
+    tail_imbalances = [p.get('net_over_abs_pct', p.get('tail_imbalance_pct')) for p in points]
+    ratios_r2 = [p.get('ratio_r2', p.get('ratio_at_r2')) for p in points]
     
     fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(7, 2.5))
     
@@ -91,10 +92,21 @@ def make_superluminal(out_path: Path):
     
     data = load_json(data_path)
     
-    velocities = [p['v'] for p in data['points']]
-    e_pos = [p['e_pos'] for p in data['points']]
-    e_neg = [p['e_neg'] for p in data['points']]
-    tail_pct = [p['tail_imbalance_pct'] for p in data['points']]
+    points = data.get('sweep', {}).get('sweep_results', data.get('points', []))
+    velocities = [p['v'] for p in points]
+    e_pos = [p.get('e_pos_inf', p.get('e_pos')) for p in points]
+    e_neg = [abs(p.get('e_neg_inf', p.get('e_neg'))) for p in points]
+    
+    # Handle tail imbalance (pct vs fraction)
+    # If using axisym, tail_net_frac is fraction (~1e-6). Convert to pct if needed.
+    # Convergence data was already pct (~0.1).
+    def get_pct(p):
+        if 'net_over_abs_pct' in p: return p['net_over_abs_pct']
+        if 'tail_imbalance_pct' in p: return p['tail_imbalance_pct']
+        if 'tail_net_frac' in p: return p['tail_net_frac'] * 100.0
+        return 0.0
+
+    tail_pct = [get_pct(p) for p in points]
     
     fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(7, 2.5))
     

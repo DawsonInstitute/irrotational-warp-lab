@@ -1,15 +1,27 @@
 % Irrotational Warp Metrics: Energy Diagnostics and Parameter Optimization
 % LaTeX document for paper assembly
 
-\documentclass[twocolumn,prd,superscriptaddress,nofootinbib]{revtex4-2}
+\documentclass[10pt,twocolumn]{article}
 
 % Packages
 \usepackage{amsmath,amssymb}
 \usepackage{graphicx}
 \usepackage{xcolor}
 \usepackage{hyperref}
-\usepackage{physics}  % For bra-ket, derivatives
 \usepackage{booktabs} % For professional tables
+\usepackage[margin=1in]{geometry} % Standard margins
+
+% Define abstract environment for twocolumn article if needed
+% (article class has abstract, but title handling is different)
+
+% Load author config
+\IfFileExists{author_config.tex}{%
+	\input{author_config.tex}%
+}{%
+	\providecommand{\authorname}{Independent Researcher}%
+	\providecommand{\authoraffiliation}{Independent Research Institute}%
+	\providecommand{\authoremail}{contact@example.com}%
+}
 
 % Define macros
 \newcommand{\betavec}{\boldsymbol{\beta}}
@@ -21,17 +33,23 @@
 \title{Irrotational Warp Metrics: Energy Condition Diagnostics \\
        and Parameter Space Optimization}
 
-\author{Author Name}
-\email{author@institution.edu}
-\affiliation{Institution Name, Department, City, State, Country}
+\author{\authorname \\ \small \textit{\authoraffiliation}}
 
-\date{\today}
+\date{January 17, 2026}
+
+\maketitle
+\footnotetext{\noindent\textasteriskcentered\ Electronic address: \textbf{\texttt{\authoremail}}}
+\renewcommand{\thefootnote}{\arabic{footnote}}
+%\sloppy % Optional
 
 \begin{abstract}
-We present a comprehensive numerical study of irrotational (curl-free) shift-vector warp metrics in the ADM formalism, focusing on energy-condition diagnostics and parameter optimization. Using Rodal-style dipole potentials with smoothed wall functions, we compute both fast Eulerian energy densities and invariant diagnostics via Einstein tensor eigenvalues. We demonstrate systematic convergence of 3D volume integrals with tail corrections, validate against literature results (Celmaster \& Rubin 2024), and explore superluminal parameter regimes ($v > 1$). Bayesian optimization with Gaussian Process regression efficiently identifies minimal negative-energy configurations, requiring 5$\times$ fewer evaluations than grid search methods. Our results establish quantitative bounds on negative energy requirements for various parameter combinations, providing defensible inputs for theoretical assessments of irrotational warp drive feasibility.
+We present a comprehensive numerical study of irrotational (curl-free) shift-vector warp metrics in the ADM formalism, focusing on energy-condition diagnostics and parameter optimization. Using Rodal-style dipole potentials with smoothed wall functions, we compute both fast Eulerian energy densities and invariant diagnostics via Einstein tensor eigenvalues. We demonstrate systematic convergence of 3D volume integrals with tail corrections, validate against literature results (Celmaster \& Rubin 2025), and explore superluminal parameter regimes ($v > 1$). Bayesian optimization with Gaussian Process regression efficiently identifies minimal negative-energy configurations, requiring 5$\times$ fewer evaluations than grid search methods. Our results establish quantitative bounds on negative energy requirements for various parameter combinations, providing defensible inputs for theoretical assessments of irrotational warp drive feasibility.
 \end{abstract}
 
 \maketitle
+\footnotetext{\noindent\textasteriskcentered\ Electronic address: \textbf{\texttt{\authoremail}}}
+\renewcommand{\thefootnote}{\arabic{footnote}}
+\sloppy
 
 %===============================================================================
 \section{Introduction}
@@ -171,7 +189,7 @@ Bayesian optimization with GP regression efficiently explores $(\sigma, v)$ para
 
 \subsection{Validation Against Literature}
 
-We reproduce Celmaster \& Rubin's (2024) analysis of Lentz-style potentials, confirming:
+We reproduce Celmaster \& Rubin's (2025) analysis of Lentz-style potentials, confirming:
 \begin{itemize}
     \item Weak Energy Condition violations (negative $\rho$) in 0.3\% of grid points
     \item Minimum energy density $E_{\min} \sim -6 \times 10^8$ (dimensionless units)
@@ -235,7 +253,7 @@ Future work includes:
 \section*{Data Availability}
 
 All code, data, and figures are available at: \\
-\url{https://github.com/username/irrotational-warp-lab}
+\url{https://github.com/arcticoder/irrotational-warp-lab}
 
 Computational runs are fully reproducible via:
 \begin{verbatim}
@@ -245,30 +263,9 @@ python scripts/reproduce_paper_figures.py
 
 \section*{Acknowledgments}
 
-The author thanks [collaborators] for discussions and [funding agency] for support. Computations performed on [cluster/GPU].
+The author thanks the broader warp drive research community for open code and discussion. Computations were performed on a Ryzen 5 3600 6-core 3.60 GHz workstation with 32GB RAM and a GeForce RTX 2060 SUPER (8GB VRAM).
 
-\begin{thebibliography}{99}
-
-\bibitem{Alcubierre1994}
-M. Alcubierre,
-``The warp drive: hyper-fast travel within general relativity,''
-Class. Quantum Grav. \textbf{11}, L73 (1994).
-
-\bibitem{Lentz2021}
-E. W. Lentz,
-``Breaking the warp barrier: hyper-fast solitons in Einstein-Maxwell-plasma theory,''
-Class. Quantum Grav. \textbf{38}, 075015 (2021).
-
-\bibitem{Rodal2025}
-J. Rodal,
-``Exact solutions for irrotational warp drive spacetimes,''
-arXiv:2501.xxxxx (2025).
-
-\bibitem{Celmaster2024}
-W. Celmaster and S. Rubin,
-``Violations of the weak energy condition for Lentz warp drives,''
-arXiv:2412.xxxxx (2024).
-
-\end{thebibliography}
+\bibliographystyle{ieeetr}
+\bibliography{irrotational_warp_metric}
 
 \end{document}
