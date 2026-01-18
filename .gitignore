@@ -13,3 +13,12 @@ build/
 results/
 
 papers/related/*
+papers/**/*.aux
+papers/**/*.out
+papers/**/*.log
+papers/**/*.pdf
+papers/**/*.bbl
+papers/**/*.blg
+papers/**/*.png
+papers/**/*Zone.Identifier
+papers/**/author_config.tex
